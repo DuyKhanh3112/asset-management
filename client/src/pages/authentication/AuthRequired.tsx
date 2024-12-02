@@ -7,7 +7,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 // Thành phần AuthRequired kiểm tra xem người dùng đã xác thực chưa
 const AuthRequired = () => {
     const { isAuthenticated } = useAuth(); // Lấy trạng thái xác thực từ context
-    const userId = localStorage.getItem('vsc_u')
+    const userId = localStorage.getItem('asset_u')
 
     return (
         isAuthenticated && userId

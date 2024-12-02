@@ -47,7 +47,7 @@ const Header = ({handleChangeCompany,setAssetList,handelChosenAsset,handleGetAss
 
 
     const getMyCurrentCompanyShortName = () => {
-        if(companies.length>0){
+        if(companies?.length>0){
             const currentOne = companies.find((com:ICompany) => com.id === auth?.company_id[0]);
             if(!currentOne) {
                 setMyCurrentCompanyShortName("Không tồn tại");
@@ -190,7 +190,7 @@ const Header = ({handleChangeCompany,setAssetList,handelChosenAsset,handleGetAss
             </Button>
           </div>
       </div>
-      <DrawerSelection open = {openDrawer} handleClose = {handleClose} handleChangeCompany={handleChangeCompany}/>
+      {openDrawer && <DrawerSelection open = {openDrawer} handleClose = {handleClose} handleChangeCompany={handleChangeCompany}/>}
       {isOpen && <QRScanner isOpen={isOpen} setOpen={setOpen} setDecodedText = {handleGetAssetViaCode}/>}
     </>
   )

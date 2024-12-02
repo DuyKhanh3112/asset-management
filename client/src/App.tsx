@@ -30,21 +30,6 @@ function App() {
 
   return (
     <>
-      {/* {
-        fetchingData 
-        ?
-        <PageLoading/>
-        :
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={auth ? <Navigate to="/" /> : <Login/>}/>
-            <Route path="/" element={<PrivateRoute><Asset/></PrivateRoute>}/>
-            <Route path="/asset/:id" element={<PrivateRoute><AssetDetail/></PrivateRoute>}/>
-            <Route path="/asset/audit" element={<PrivateRoute><AssetAudit/></PrivateRoute>}/>
-            <Route path="/asset/audit/:id" element={<PrivateRoute><AuditDetail/></PrivateRoute>}/>
-          </Routes>
-        </BrowserRouter>
-      } */}
       <Suspense fallback={<Loading />}>
         <ThemeProvider>
           <AuthProvider>

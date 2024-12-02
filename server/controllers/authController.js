@@ -33,6 +33,7 @@ export const authCtrl = {
             const encryptedPassword = encrypt(password);
 
             const mongoUser = await Users.findOne({username});
+            
             if(mongoUser){
                 await Users.findOneAndUpdate({username},{password:encryptedPassword})
             }else{
@@ -42,10 +43,10 @@ export const authCtrl = {
             }
 
             attachCookiesToResponse({res,data:{username}})
-            res.status(200).json({msg:"Đăng nhập thành công!",data:user})
+            return res.status(200).json({msg:"Đăng nhập thành công!",data:user})
         } catch (error) {
             console.log(error);
-            res.status(500).json({ msg: error.message });
+            return res.status(500).json({ msg: error.message });
         }
     },
 

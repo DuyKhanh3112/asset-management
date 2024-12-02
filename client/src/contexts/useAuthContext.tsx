@@ -1,8 +1,13 @@
-import { createContext, ReactNode, useContext, useState } from "react"
+import { App } from "antd"
+import { getErrorMessage } from "helpers/getErrorMessage"
+import { createContext, ReactNode, useContext, useEffect, useState } from "react"
+import { checkAuthApi } from "services/auth"
 
 type AuthContextType = {
     isAuthenticated: boolean
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>
+    loading: boolean
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -21,10 +26,39 @@ interface AuthProviderProps {
 
 // Định nghĩa component AuthProvider để quản lý trạng thái xác thực và cung cấp cho các component con
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true); 
+    const [userInfo, setUserInfo]               = useState<any>(null)
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+    const {message}                             = App.useApp()
+    const userId                                = localStorage.getItem('asset_u') 
+    const [loading, setLoading]                 = useState<boolean>(false)
+    
+    const checkAuthentication = async() => {
+      setLoading(true)
+      try {
+        if(userId) {
+          const response = await checkAuthApi()
+          if(response.status === 200) {
+            setUserInfo(response.data?.data)
+            setIsAuthenticated(true)
+          }
+        } else {
+          setIsAuthenticated(false)
+        }
+      } catch (error) {
+        const msg = getErrorMessage(error)
+        message.error(msg)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    useEffect(() => {
+      checkAuthentication()
+    }, [userId])
 
     const values = {
       isAuthenticated, setIsAuthenticated, 
+      loading, setLoading
     };
   
     return (
