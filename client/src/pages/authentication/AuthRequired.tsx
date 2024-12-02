@@ -8,9 +8,9 @@ import { Navigate, Outlet } from 'react-router-dom';
 const AuthRequired = () => {
     const { isAuthenticated } = useAuth(); // Lấy trạng thái xác thực từ context
     const userId = localStorage.getItem('asset_u')
-
+    
     return (
-        isAuthenticated && userId
+        (isAuthenticated && userId !== "")
             ? <Outlet />
             : <Navigate to={"/login"} />
     )

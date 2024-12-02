@@ -9,8 +9,9 @@ import Loading from 'components/loading/Loading'
 const RouteWithSubRoutes = () => {
   const routes    = useRoutes(routesConfig);
   const {loading} = useAuth()
+  const userId = localStorage.getItem('asset_u')
 
-  if(loading) return <Loading />
+  if(loading && userId === "") return <Loading />
 
   return <>{routes}</>
 }

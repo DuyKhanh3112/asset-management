@@ -15,8 +15,8 @@ export const getCompany = () => {
                 return { success: false, message: response.data?.msg };
             }
 
-            dispatch(getCompanies.success(response.data?.data));
-            return { success: true, message: response.data?.data };
+            dispatch(getCompanies.success(response.data?.data || []));
+            return { success: true, message: response.data?.msg };
         } catch (e) {
             dispatch(getCompanies.failure(null));
             const message = getErrorMessage(e);

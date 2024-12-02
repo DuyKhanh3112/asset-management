@@ -1,3 +1,4 @@
+import Loading from 'components/loading/Loading'
 import useAsyncAction from 'hooks/useAsyncAction'
 import React, { useEffect } from 'react'
 import { getCompany } from 'stores/actions/companies'
@@ -12,6 +13,9 @@ const Asset = () => {
   useEffect(() => {
     fetchCompanies()
   }, [])
+
+  if(loading) return <Loading />
+
   return (
     <div>
       Asset
