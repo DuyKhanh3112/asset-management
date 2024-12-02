@@ -72,7 +72,7 @@ export const authCtrl = {
     checkAuth: async (req,res) => {
         try {
             const {stto} = req.cookies;
-            if(!stto) return res.status(200).json({msg:"Cần phải đăng nhập để tiếp tục"})
+            if(!stto) return res.status(401).json({msg:"Cần phải đăng nhập để tiếp tục"})
             const payload = isTokenValid(stto);
 
             if(!payload) return res.status(403).json({msg:'Phiên làm việc không hợp lệ! Vui lòng đăng nhập lại'})
