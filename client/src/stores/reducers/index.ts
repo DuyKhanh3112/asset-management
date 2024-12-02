@@ -1,9 +1,11 @@
-import { combineReducers } from "redux"; 
-import authReducer from './auth'; 
+import { combineReducers } from "redux";
+import authReducer from './auth';
+import companyReducer from "./companies";
 
 // Định nghĩa rootReducer bằng cách kết hợp tất cả các reducer, ví dụ như authReducer, thành một reducer gốc duy nhất
 export const rootReducer = combineReducers({
   auth: authReducer, // Kết hợp authReducer vào rootReducer với khóa là 'auth'
+  companies: companyReducer,
 });
 
 // Định nghĩa kiểu RootState bằng cách sử dụng ReturnType để suy luận kiểu từ rootReducer,
