@@ -29,8 +29,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [userInfo, setUserInfo]               = useState<any>(null)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
     const {message}                             = App.useApp()
-    const userId                                = localStorage.getItem('asset_u') 
     const [loading, setLoading]                 = useState<boolean>(false)
+    const userId                                = localStorage.getItem('asset_u') 
     
     const checkAuthentication = async() => {
       setLoading(true)

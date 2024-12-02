@@ -7,14 +7,12 @@ import { ILoginData } from 'interfaces';
 import { getErrorMessage } from 'helpers/getErrorMessage';
 import { authLoginApi } from 'services/auth';
 import { useForm } from 'antd/es/form/Form';
-import { useNavigate } from 'react-router-dom';
 import Loading from 'components/loading/Loading';
 
 const Login = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const {message}             = App.useApp()
   const [form]                = useForm()
-  const navigate              = useNavigate()
   
   const onFinish: FormProps<ILoginData>['onFinish'] = async ({username,password}) => {
     setLoading(true)
@@ -24,7 +22,7 @@ const Login = () => {
       if(response.status === 200) {
         localStorage.setItem("asset_u", response.data?.data?.[0]?.id); 
         message.success(response.data?.msg)
-        navigate('/')
+        window.location.href = '/'
       }
     } catch (error) {
       const msg = getErrorMessage(error)
