@@ -3,6 +3,8 @@ import { reducerHandler } from "../common";
 import { actionCreator } from "stores/actions";
 
 const getCompanies = actionCreator("GET_COMPANIES");
+const changeCompany = actionCreator("CHANGE_COMPANY");
+
 
 // Định nghĩa trạng thái khởi tạo cho reducer
 const initialState: DataStoreType = {
@@ -29,6 +31,11 @@ const companyReducer = <T extends string, D>(
         case getCompanies.SUCCESS:
         case getCompanies.FAILURE:
             return reducerHandler(state, action, getCompanies as ActionHandler<"GET_COMPANIES">);
+
+        case changeCompany.REQUEST:
+        case changeCompany.SUCCESS:
+        case changeCompany.FAILURE:
+            return reducerHandler(state, action, getCompanies as ActionHandler<"CHANGE_COMPANY">);
 
         default:
             return state; // Trả về trạng thái hiện tại nếu không khớp với bất kỳ trường hợp nào

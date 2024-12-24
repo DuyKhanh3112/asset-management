@@ -14,14 +14,14 @@ const useAsyncAction = () => {
         async <T>(
             action: () => (dispatch: AppDispatch) => Promise<T>, // Hàm hành động trả về hàm nhận dispatch
             isMessage?: boolean // Thông báo tùy chọn
-        ): Promise<boolean> => {
+        ): Promise<any> => {
             setLoading(true); // Bắt đầu trạng thái loading
             try {
                 const result: T = await dispatch(action()); // Gọi hành động và chờ kết quả
                 // Kiểm tra kết quả và hiển thị thông báo tương ứng
                 if (result && (result as any)?.success) {
                     isMessage && (result as any)?.message && message.success((result as any)?.message)
-                    return true; // Trả về true nếu thành công
+                    return result; // Trả về true nếu thành công
                 } else {
                     isMessage && message.error((result as any)?.message)
                     return false; // Trả về false nếu không thành công

@@ -1,9 +1,10 @@
-import { ActionHandler, ActionType, DataStoreType } from "typings"; 
+import { ActionHandler, ActionType, DataStoreType } from "typings";
 import { reducerHandler } from "../common";
 import { actionCreator } from "stores/actions";
 
-const loginAction    = actionCreator("LOGIN");
+const loginAction = actionCreator("LOGIN");
 const checkAuthAction = actionCreator("CHECK_AUTH");
+const logout = actionCreator("LOGOUT");
 
 // Định nghĩa trạng thái khởi tạo cho reducer
 const initialState: DataStoreType = {
@@ -14,7 +15,7 @@ const initialState: DataStoreType = {
 };
 
 // Định nghĩa kiểu GroupAction với hai tham số: T cho loại action và D cho dữ liệu
-type GroupAction<T extends string, D> = { 
+type GroupAction<T extends string, D> = {
   type: keyof ActionType<T>; // Kiểu của action.type dựa trên ActionType
   data?: D; // Dữ liệu liên quan đến action
 };
@@ -26,15 +27,22 @@ const authReducer = <T extends string, D>(
 ) => {
   switch (action.type) {
     // Xử lý các action liên quan đến xác thực
-    case loginAction.REQUEST: 
-    case loginAction.SUCCESS: 
-    case loginAction.FAILURE: 
+    case loginAction.REQUEST:
+    case loginAction.SUCCESS:
+    case loginAction.FAILURE:
       return reducerHandler(state, action, loginAction as ActionHandler<"LOGIN">);
 
-    case checkAuthAction.REQUEST: 
-    case checkAuthAction.SUCCESS: 
-    case checkAuthAction.FAILURE: 
+    case checkAuthAction.REQUEST:
+    case checkAuthAction.SUCCESS:
+    case checkAuthAction.FAILURE:
       return reducerHandler(state, action, checkAuthAction as ActionHandler<"CHECK_AUTH">);
+
+    case logout.REQUEST:
+    case logout.SUCCESS:
+    case logout.FAILURE:
+      return reducerHandler(state, action, logout as ActionHandler<"LOGOUT">);
+
+
 
     default:
       return state; // Trả về trạng thái hiện tại nếu không khớp với bất kỳ trường hợp nào

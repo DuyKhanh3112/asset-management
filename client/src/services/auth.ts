@@ -2,9 +2,13 @@ import { ILoginData } from "interfaces";
 import instance from "./instance";
 
 export function authLoginApi(data: ILoginData) {
-  return instance.post("/api/login", data); 
+  return instance.post("/api/login", data);
 }
 
 export function checkAuthApi() {
-  return instance.get("/api/check-auth"); 
+  return instance.get("/api/check-auth");
+}
+
+export function logoutApi() {
+  return instance.delete("/api/logout");
 }
