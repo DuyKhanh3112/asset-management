@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import { RootState } from "stores/reducers";
 import { useSelector } from "react-redux";
