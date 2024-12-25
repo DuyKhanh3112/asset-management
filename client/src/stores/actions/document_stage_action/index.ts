@@ -34,11 +34,12 @@ export const confirm_action = (id: number) => {
                 dispatch(getDocumentStageAction.failure(null));
                 return { success: false, message: response.data?.msg };
             }
-            dispatch(getDocumentStageAction.success(response.data?.data || []));
+            // dispatch(getDocumentStageAction.success(response.data?.data || []));
             return { success: true, message: response.data?.msg };
         } catch (e) {
             dispatch(getDocumentStageAction.failure(null));
-            const message = getErrorMessage(e);
+            // const message = getErrorMessage(e);
+            const message = getErrorMessage('Lỗi Odoo Server.');
             return { success: false, message: message }
         }
     }

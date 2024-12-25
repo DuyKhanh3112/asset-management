@@ -124,7 +124,7 @@ const SignDocumentCreate = () => {
                         showSearch
                         placeholder="Select a employee"
                         optionFilterProp="label"
-                        style={{ width: '200px' }}
+                        style={{ width: '100%' }}
                         onChange={(value: number) => { handleChangeLeaveType(index, value) }}
                         onSearch={() => { }}
                         options={temporary_leave_type === null ? [] :
@@ -145,7 +145,8 @@ const SignDocumentCreate = () => {
             key: 'range_date',
             render(value, record, index) {
                 return <>
-                    <RangePicker style={{ width: '250px' }}
+                    <RangePicker
+                        style={{ width: '100%' }}
                         format="DD/MM/YYYY"
                         onChange={(dates, stringDate) => { handleChageRangeDate(index, dates, stringDate) }} />
                 </>
@@ -158,7 +159,7 @@ const SignDocumentCreate = () => {
             render(value, record, index) {
                 return <>
                     <Select
-                        style={{ width: '100px' }}
+                        style={{ width: '100%' }}
                         options={[
                             { value: 'ca_ngay', label: "Cả ngày" },
                             { value: 'nua_ngay', label: "Nửa ngày" },
@@ -299,113 +300,138 @@ const SignDocumentCreate = () => {
                     <Divider orientation="left" style={{ borderColor: colors.border }}>
                         <b style={{ fontSize: 20 }}>INFORMATION</b>
                     </Divider>
-                    <Row>
-                        <Col span={6}>
-                            <b>Người đề nghị: </b>
-                        </Col>
-                        <Col span={18}>
-                            <Select
-                                showSearch
-                                placeholder="Select a employee"
-                                optionFilterProp="label"
-                                style={{ width: '50%' }}
-                                onChange={(value: number) => { onChangeEmployee(value) }}
-                                options={employee_multi_company === null ? [] :
-                                    employee_multi_company?.map((item) => {
-                                        return {
-                                            value: item.id,
-                                            label: item.s_identification_id + ' - ' + item.name[1],
-                                        }
-                                    })
-                                }
-                            />
-                        </Col>
-
-                        <Col span={6}>
-                            <b>Mã SC: </b>
-                        </Col>
-                        <Col span={18}>
-                            {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.s_identification_id}
-                        </Col>
-
-                        <Col span={6}>
-                            <b>Phòng ban: </b>
-                        </Col>
-                        <Col span={18}>
-                            {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.department_id[1]}
-                        </Col>
-
-                        <Col span={6}>
-                            <b>Chức vụ: </b>
-                        </Col>
-                        <Col span={18}>
-                            {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.job_id[1]}
-                        </Col>
-
-                        <Col span={6}>
-                            <b>Công ty: </b>
-                        </Col>
-                        <Col span={18}>
-                            {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.company_id[1]}
-                        </Col>
-
-                        <Col span={6}>
-                            <b>Mẫu Tài liệu: </b>
-                        </Col>
-                        <Col span={18}>
-                            <Select
-                                showSearch
-                                placeholder="Select a template"
-                                optionFilterProp="label"
-                                style={{ width: '50%' }}
-                                onChange={(value: number) => { onChangeTemplate(value) }}
-                                onSearch={() => { }}
-                                options={
-                                    sign_detail?.map((item) => {
-                                        return {
-                                            label: item.name,
-                                            value: item.id,
-                                        }
-                                    })
-                                }
-                            />
-                        </Col>
-                    </Row>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <Row>
+                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                <b>Người đề nghị:</b>
+                            </Col>
+                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                <Select
+                                    showSearch
+                                    placeholder="Select a employee"
+                                    optionFilterProp="label"
+                                    style={{ width: '50%' }}
+                                    onChange={(value: number) => { onChangeEmployee(value) }}
+                                    options={employee_multi_company === null ? [] :
+                                        employee_multi_company?.map((item) => {
+                                            return {
+                                                value: item.id,
+                                                label: item.s_identification_id + ' - ' + item.name[1],
+                                            }
+                                        })
+                                    }
+                                />
+                            </Col>
+                        </Row>
+                    </div>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <Row>
+                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                <b>Mã SC: </b>
+                            </Col>
+                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.s_identification_id}
+                            </Col>
+                        </Row>
+                    </div>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <Row>
+                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                <b>Phòng/Ban: </b>
+                            </Col>
+                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.department_id[1]}
+                            </Col>
+                        </Row>
+                    </div>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <Row>
+                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                <b>Chức vụ: </b>
+                            </Col>
+                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.job_id[1]}
+                            </Col>
+                        </Row>
+                    </div>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <Row>
+                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                <b>Công ty: </b>
+                            </Col>
+                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.company_id[1]}
+                            </Col>
+                        </Row>
+                    </div>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <Row>
+                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                <b>Mẫu Tài liệu: </b>
+                            </Col>
+                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                <Select
+                                    showSearch
+                                    placeholder="Select a template"
+                                    optionFilterProp="label"
+                                    style={{ width: '50%' }}
+                                    onChange={(value: number) => { onChangeTemplate(value) }}
+                                    onSearch={() => { }}
+                                    options={
+                                        sign_detail?.map((item) => {
+                                            return {
+                                                label: item.name,
+                                                value: item.id,
+                                            }
+                                        })
+                                    }
+                                />
+                            </Col>
+                        </Row>
+                    </div>
                     {template === 7 ?
                         <>
                             <Divider orientation="left" style={{ borderColor: colors.border }}>
                                 <b style={{ fontSize: 20 }}>ĐƠN XIN PHÉP NGHỈ</b>
                             </Divider>
-                            <Row>
-                                <Col span={6}>
-                                    <b>Lý do nghỉ việc: </b>
-                                </Col>
-                                <Col span={18}>
-                                    <TextArea
-                                        autoSize={{ minRows: 3, maxRows: 6 }}
-                                        style={{ width: '50%' }}
-                                        value={reasonLeave}
-                                        onChange={(e) => {
-                                            handleChangeReasonLeave(e)
-                                        }}
-                                    />
-                                </Col>
-
-                                <Col span={6}>
-                                    <div style={{ paddingTop: '20px' }}>
-                                        <b>Chi tiết: </b>
-                                    </div>
-                                </Col>
-                                <Col span={18}>
-                                    <div style={{ paddingTop: '20px' }}>
-                                        <Table columns={columns} dataSource={data} pagination={false} />
+                            <div style={{
+                                paddingBottom: '10px'
+                            }}>
+                                <Row>
+                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                        <b>Lý do nghỉ việc: </b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                        <TextArea
+                                            autoSize={{ minRows: 3, maxRows: 6 }}
+                                            // style={{ width: '50%' }}
+                                            value={reasonLeave}
+                                            onChange={(e) => {
+                                                handleChangeReasonLeave(e)
+                                            }}
+                                        />
+                                    </Col>
+                                </Row>
+                            </div>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                        <div style={{ paddingTop: '24px' }}>
+                                            <b>Chi tiết: </b>
+                                        </div>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={24} lg={24} xl={18}>
+                                        <Table columns={columns}
+                                            dataSource={data}
+                                            pagination={false}
+                                            style={{ width: '100%' }} />
                                         <Button style={{
                                             borderRadius: '20px',
                                             marginTop: '5px',
                                         }} type="dashed" icon={<PlusCircleFilled />} onClick={handelAddRow}>Thêm dòng</Button>
-                                    </div>
-                                </Col>
-                            </Row>
+                                    </Col>
+                                </Row>
+                            </div>
                         </>
                         : <></>}
                 </div>

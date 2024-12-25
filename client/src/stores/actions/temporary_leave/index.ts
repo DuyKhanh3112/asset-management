@@ -34,7 +34,7 @@ export const update_temporary_leave = (id: number, reason_leaving: string) => {
                 // dispatch(getTemporaryLeaves.failure(null));
                 return { success: false, message: response.data?.msg };
             }
-            dispatch(getTemporaryLeaves.success(response.data?.data || []));
+            // dispatch(getTemporaryLeaves.success(response.data?.data || []));
             return { success: true, message: response.data?.msg, data: response.data?.data };
         } catch (e) {
             dispatch(getTemporaryLeaves.failure(null));

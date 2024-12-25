@@ -2,7 +2,7 @@ import { colors, myColor } from "constants/color";
 import { ISignDocument } from "interfaces";
 import { RootState } from "stores/reducers";
 import { useSelector } from "react-redux";
-import { Avatar, Badge, Card, Col, Empty, List, Menu, Select, Tabs } from "antd";
+import { Avatar, Badge, Card, Col, Empty, List, Menu, Row, Select, Tabs } from "antd";
 import { IUser } from "interfaces/user";
 import MainLayout from "components/app/MainLayout";
 import useAsyncAction from "hooks/useAsyncAction";
@@ -86,8 +86,8 @@ const SignDocumentArrive = () => {
             fetchDocumentArriveAwait()
             return
         }
-    }
 
+    }
     useEffect(() => {
         setStatus('all')
         fetchDocumentArrive()
@@ -96,28 +96,26 @@ const SignDocumentArrive = () => {
     return (
         <>
             <MainLayout title="Văn bản đến">
-                <Select
-                    defaultValue={status}
-                    style={{ width: '30%' }}
-                    onChange={(value: string) => { handleChooseStatus(value) }}
-                    options={[
-                        { value: 'all', label: 'Tất cả' },
-                        { value: 'process', label: 'Đang chờ xét duyệt' },
-                        { value: 'done', label: 'Đã được xét duyệt' },
-                        { value: 'await', label: 'Đề xuất liên quan', },
-                    ]}
-                />
 
-                {/* <Tabs defaultActiveKey="1">
-                    <TabPane tab="Tất cả" key="all" >
-                    </TabPane>
-                    <TabPane tab="Đang chờ xét duyệt" key="process">
-                    </TabPane>
-                    <TabPane tab="Đã được xét duyệt" key="done">
-                    </TabPane>
-                    <TabPane tab="Đề xuất liên quan" key="await">
-                    </TabPane>
-                </Tabs> */}
+                <Row>
+                    <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                        <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
+                            <Select
+                                defaultValue={status}
+                                style={{ width: '100%' }}
+                                onChange={(value: string) => { handleChooseStatus(value) }}
+                                options={[
+                                    { value: 'all', label: 'Tất cả' },
+                                    { value: 'process', label: 'Đang chờ xét duyệt' },
+                                    { value: 'done', label: 'Đã được xét duyệt' },
+                                    { value: 'await', label: 'Đề xuất liên quan', },
+                                ]}
+                            />
+                        </div>
+                    </Col>
+                </Row>
+
+
                 <List
                     itemLayout="horizontal"
                     dataSource={signDocument || []}
@@ -126,18 +124,26 @@ const SignDocumentArrive = () => {
                         <div style={{ padding: '20px' }}>
                             <Card title={
                                 <div style={{
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    // display: 'flex', 
+                                    justifyContent: 'space-between', alignItems: 'center',
                                 }} >
-                                    <div style={{
-                                        width: '85%',
-                                        overflow: 'hidden'
-                                    }}> <b>{item.name}</b></div>
-                                    <Badge status={item.status === 'draft' ? 'default'
-                                        : item.status === 'process' ? 'processing'
-                                            : item.status === 'completed' ? 'success'
-                                                : 'error'}
-                                        text={capitalizeFirstLetter(item.status)} size="default" />
-
+                                    <Row>
+                                        <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                            <div style={{
+                                                width: '100%',
+                                                overflow: 'hidden'
+                                            }}> <b>{item.name}</b></div>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                            <div style={{ width: '100%', justifyContent: 'end', display: 'flex' }}>
+                                                <Badge status={item.status === 'draft' ? 'default'
+                                                    : item.status === 'process' ? 'processing'
+                                                        : item.status === 'completed' ? 'success'
+                                                            : 'error'}
+                                                    text={capitalizeFirstLetter(item.status)} size="default" />
+                                            </div>
+                                        </Col>
+                                    </Row>
                                 </div>
                             } bordered={false} style={{
                                 borderRadius: '40px',

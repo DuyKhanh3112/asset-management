@@ -1,10 +1,10 @@
-import { FileOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from "@ant-design/icons";
+import { MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, GetProp, Menu, MenuProps, Image, Flex } from "antd";
 import Layout, { Content, Header } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
 import useAsyncAction from "hooks/useAsyncAction";
-import { ICompany, IEmployeeMultiCompany } from "interfaces";
-import { FC, Suspense, useEffect, useState } from "react";
+import { ICompany } from "interfaces";
+import { FC, useEffect, useState } from "react";
 import { FaBuilding } from "react-icons/fa";
 import { GrLogout } from "react-icons/gr";
 import { useSelector } from "react-redux";
@@ -21,6 +21,11 @@ import { get_employee_temporary } from "stores/actions/employee_temporary";
 import { get_employee_multi } from "stores/actions/employee_multi_company";
 import { get_temporary_leave_type } from "stores/actions/temporary_leave_type";
 import { get_sign_detail } from "stores/actions/sign_detail";
+import asset from 'images/asset.png';
+import document from 'images/documentation.png';
+import document_away from 'images/document_away.png';
+import document_arrive from 'images/document_arrive.png'
+
 
 type MainLayoutProps = {
     title?: string,
@@ -87,20 +92,25 @@ const MainLayout: FC<MainLayoutProps> = ({
     const fetchSignDetail = async () => {
         await executeAction(() => get_sign_detail(), true)
     }
-    const fetchDataDocument = () => {
-        fetchTemporaryLeaveType()
-        fetchSignDetail()
+    const fetchDataDocument = async () => {
+        await fetchTemporaryLeaveType()
+        await fetchSignDetail()
     }
     const gotoDocumentAway = async () => {
+        setIsChange(true)
         navigate(`/document_away`);
         await fetchDocumentAway()
-        fetchDataDocument()
+        await fetchDataDocument()
+        fetchEmployeeMultiCompany()
+        setIsChange(false)
+
     }
     const gotoDocumentArrive = async () => {
+        setIsChange(true)
         navigate(`/document_arrive`);
-        // await fetchDocumentArrive()
-        fetchDataDocument()
-
+        await fetchDocumentArrive()
+        await fetchDataDocument()
+        setIsChange(false)
     }
     const handleLogout = async () => {
         if (window.confirm("Bạn có muốn đăng xuất?")) {
@@ -134,26 +144,34 @@ const MainLayout: FC<MainLayoutProps> = ({
     const items: MenuItem[] = [
         {
             key: 'asset',
-            icon: <FileOutlined />,
-            label: 'Asset',
+            icon: <div style={{ width: '50px' }}>
+                <Image src={asset} style={{ maxWidth: '32px' }} preview={false} alt="" />
+            </div>,
+            label: ' Tài sản',
             onClick: gotoAsset,
         },
         {
             key: 'sign_document',
-            icon: <FileOutlined />,
-            label: 'Sign document',
+            icon: <div style={{ width: '50px' }}>
+                <Image src={document} style={{ maxWidth: '32px' }} preview={false} alt="" />
+            </div>,
+            label: 'Trình ký',
             children: [
                 {
                     key: 'document_away',
-                    icon: <FileOutlined />,
-                    label: 'Sign Document Away',
+                    icon: <div style={{ width: '50px' }}>
+                        <Image src={document_away} style={{ maxWidth: '24px' }} preview={false} alt="" />
+                    </div>,
+                    label: 'Văn bản đi',
                     onClick: gotoDocumentAway,
 
                 },
                 {
                     key: 'document_arrive',
-                    icon: <FileOutlined />,
-                    label: 'Sign Document Arrive',
+                    icon: <div style={{ width: '50px' }}>
+                        <Image src={document_arrive} style={{ maxWidth: '24px' }} preview={false} alt="" />
+                    </div>,
+                    label: 'Văn bản đến',
                     onClick: gotoDocumentArrive,
                 },
             ]
@@ -199,7 +217,7 @@ const MainLayout: FC<MainLayoutProps> = ({
         getMyCurrentCompanyShortName();
     }, [user, companies])
 
-    if (loading || isChange) return (<PageLoading />);
+    if (isChange) return (<PageLoading />);
 
     return (
         <>
@@ -215,16 +233,17 @@ const MainLayout: FC<MainLayoutProps> = ({
 
                     <Image src={logo} style={{ maxHeight: '200px' }} preview={false} alt="" />
                     <Menu
-                        style={{ backgroundColor: colors.white }}
+                        style={{ backgroundColor: colors.white, fontWeight: "bold" }}
                         mode="inline"
                         defaultSelectedKeys={['1']}
-                        items={items} defaultOpenKeys={['sign_document']} />
+                        items={items} defaultOpenKeys={['sign_document']}
+                    />
                 </Sider>
                 <Layout>
                     <Header style={{
                         padding: 0,
                     }}>
-                        <Flex align="center" style={{ height: '100%' }}>
+                        <Flex align="start" >
                             <Button
                                 type="text"
                                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -234,7 +253,12 @@ const MainLayout: FC<MainLayoutProps> = ({
                                     width: 64,
                                     height: 64,
                                 }} />
-                            <b>{title}</b>
+                            <div style={{
+                                width: '90%',
+                                overflow: 'hidden'
+                            }}>
+                                <b>{title}</b>
+                            </div>
                         </Flex>
                     </Header>
                     <Content

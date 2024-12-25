@@ -128,7 +128,6 @@ export const signDocumentCtl = {
         try {
             // console.log(req)
             const { name, employee_request, document_detail, reason_leaving } = req.body;
-            console.log(req.body)
             const data = await createSignDocument(req.odoo, req.user, name, employee_request, document_detail, reason_leaving);
             res.status(200).json({ data })
         } catch (error) {

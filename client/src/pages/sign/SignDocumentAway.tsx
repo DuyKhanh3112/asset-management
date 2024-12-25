@@ -1,63 +1,24 @@
-import { IEmployeeMultiCompany, ISignDocument } from "interfaces";
+import { ISignDocument } from "interfaces";
 import { RootState } from "stores/reducers";
 import { useSelector } from "react-redux";
-import { Avatar, Badge, Button, Card, List } from "antd";
+import { Badge, Button, Card, Col, List, Row, Select } from "antd";
 import { IUser } from "interfaces/user";
 import MainLayout from "components/app/MainLayout";
 import { get_document_away } from "stores/actions/sign_document";
 import useAsyncAction from "hooks/useAsyncAction";
 import PageLoading from "widgets/PageLoading";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { get_current_stage_action } from "stores/actions/current_satge_action";
-import { get_document_stage_action } from "stores/actions/document_stage_action";
-import { get_document_stage } from "stores/actions/document_stage";
 import { PlusCircleOutlined } from "@ant-design/icons";
-import { get_temporary_leave } from "stores/actions/temporary_leave";
-import { get_temporary_leave_line } from "stores/actions/temporary_leave_line";
 
 const SignDocumentAway = () => {
     const signDocument = useSelector((state: RootState) => state.sign_document?.data) as ISignDocument[] | null;
     const user = useSelector((state: RootState) => state.users?.data) as IUser | null;
     const { executeAction, loading } = useAsyncAction();
     const navigate = useNavigate()
-    // const employee_multi_company = useSelector((state: RootState) => state.employee_multi_company?.data) as IEmployeeMultiCompany[] | null;
+    const [status, setStatus] = useState('all')
 
-
-    // const fetchDocumentAway = async () => {
-    //     console.log('load away')
-    //     await executeAction(() => get_document_away(), true)
-    // }
-    // useEffect(() => {
-    // fetchDocumentAway()
-    // }, [])
-
-    const fetchDocumentStage = async (id: number) => {
-        await executeAction(() => get_document_stage(id), true)
-    }
-
-    const fetchDocumentStageAction = async (id: number) => {
-        await executeAction(() => get_document_stage_action(id), true)
-    }
-
-    const fetchCurrentStageAction = async (id: number) => {
-        await executeAction(() => get_current_stage_action(id), true)
-    }
-
-    const fetchTemporaryLeave = async (id: number) => {
-        await executeAction(() => get_temporary_leave(id), true)
-    }
-    const fetchTemporaryLeaveLine = async (id: number) => {
-        await executeAction(() => get_temporary_leave_line(id), true)
-    }
     const chooseDocument = async (id: number) => {
-        // fetchDocumentArrive()
-        fetchDocumentStage(id)
-        fetchDocumentStageAction(id)
-        fetchCurrentStageAction(id)
-        fetchTemporaryLeave(id)
-        fetchTemporaryLeaveLine(id)
-
         navigate(`/document_detail/${id}`)
     }
 
@@ -66,38 +27,79 @@ const SignDocumentAway = () => {
         return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
     };
 
-    // if (loading) return (<PageLoading />)
 
     const gotoCreate = () => {
         navigate('/document_create')
     }
+    const handleChooseStatus = (value: string) => {
+        setStatus(value)
+    }
+    const fetchDocumentAway = async () => {
+        await executeAction(() => get_document_away(), true)
+    }
+
+    useEffect(() => {
+        fetchDocumentAway()
+    }, [])
 
     return loading ? <PageLoading /> : (
         <>
             <MainLayout title="Văn bản đi">
-                <div style={{ paddingLeft: '20px' }}>
-                    <Button type="primary" onClick={() => { gotoCreate() }} icon={<PlusCircleOutlined />}>
-                        Tạo văn bản
-                    </Button>
+                <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
+                    <Row style={{ justifyContent: 'space-between' }}>
+                        <Col xs={20} sm={20} md={12} lg={10} xl={10} style={{ alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{
+                                paddingBottom: '5px',
+                            }}>
+                                <Select
+                                    defaultValue={status}
+                                    style={{ width: '100%' }}
+                                    onChange={(value: string) => { handleChooseStatus(value) }}
+                                    options={[
+                                        { value: 'all', label: 'Tất cả' },
+                                        { value: 'draft', label: 'Nháp' },
+                                        { value: 'process', label: 'Đang trình ký' },
+                                        { value: 'completed', label: 'Hoàn thành', },
+                                        { value: 'canceled', label: 'Đã bị hủy', },
+                                    ]}
+                                />
+                            </div>
+                        </Col>
+                        <Col xs={6} sm={6} md={8} lg={6} xl={6}>
+                            <Button type="primary" onClick={() => { gotoCreate() }} icon={<PlusCircleOutlined />}>
+                                Tạo văn bản
+                            </Button>
+                        </Col>
+                    </Row>
                 </div>
-
                 <List
                     itemLayout="horizontal"
-                    dataSource={signDocument || []}
+                    dataSource={signDocument?.filter((doc) => status === 'all' || doc.status === status) || []}
                     grid={{ gutter: 16, xs: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
                     renderItem={(item) => (
                         <div style={{ padding: '20px' }}>
                             <Card title={
                                 <div style={{
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                }}>
-                                    <b>{item.name}</b>
-                                    <Badge status={item.status === 'draft' ? 'default'
-                                        : item.status === 'process' ? 'processing'
-                                            : item.status === 'completed' ? 'success'
-                                                : 'error'}
-                                        text={capitalizeFirstLetter(item.status)} size="default" />
-
+                                    // display: 'flex', 
+                                    justifyContent: 'space-between', alignItems: 'center',
+                                }} >
+                                    <Row>
+                                        <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                            <div style={{
+                                                width: '100%',
+                                                overflow: 'hidden'
+                                            }}> <b>{item.name}</b></div>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                            <div style={{ width: '100%', justifyContent: 'end', display: 'flex' }}>
+                                                <Badge status={item.status === 'draft' ? 'default'
+                                                    : item.status === 'process' ? 'processing'
+                                                        : item.status === 'completed' ? 'success'
+                                                            : 'error'}
+                                                    text={capitalizeFirstLetter(item.status)} size="default" />
+                                            </div>
+                                        </Col>
+                                    </Row>
                                 </div>
                             } bordered={false} style={{
                                 borderRadius: '40px',

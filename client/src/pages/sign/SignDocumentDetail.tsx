@@ -111,7 +111,8 @@ const SignDocumentDetail = () => {
     }
 
     const handleConfirmAction = async (id: number) => {
-        if (dataDetail && checkValid()) {
+        // console.log(dataDetail.length)
+        if (dataDetail && dataDetail.length > 0 && checkValid()) {
             await executeAction(() => confirm_action(id), true)
             fetchDocumentById()
             fetchDocumentStage()
@@ -121,6 +122,7 @@ const SignDocumentDetail = () => {
         }
     }
     type ColumnsType<T extends object> = GetProp<TableProps<T>, 'columns'>;
+
     const columns: ColumnsType<DataType> = [
         {
             title: '',
@@ -161,7 +163,7 @@ const SignDocumentDetail = () => {
                         showSearch
                         placeholder="Select a employee"
                         optionFilterProp="label"
-                        style={{ width: '200px' }}
+                        style={{ width: '100%' }}
                         value={record.leave_type?.id}
                         onChange={(val: number) => { handleChangeLeaveType(index, val) }}
                         disabled={signDocument.status !== 'draft' || !editting}
@@ -182,7 +184,7 @@ const SignDocumentDetail = () => {
             dataIndex: 'range_date',
             render(value, record, index) {
                 return <>
-                    <RangePicker style={{ width: '250px' }}
+                    <RangePicker style={{ width: '100%' }}
                         value={record.range_date ? [dayjs(record.range_date[0].toString()), dayjs(record.range_date[1].toString())] : null}
                         format="DD/MM/YYYY"
                         disabled={signDocument.status !== 'draft' || !editting}
@@ -197,7 +199,7 @@ const SignDocumentDetail = () => {
             render(value, record, index) {
                 return <>
                     <Select
-                        style={{ width: '100px' }}
+                        style={{ width: '100%' }}
                         options={[
                             { value: 'ca_ngay', label: "Cả ngày" },
                             { value: 'nua_ngay', label: "Nửa ngày" },
@@ -213,22 +215,24 @@ const SignDocumentDetail = () => {
             title: 'Số ngày',
             dataIndex: 'num_date',
         },
-        signDocument.status === 'draft' && editting ? {
-            title: '',
-            dataIndex: 'action',
-            key: 'action',
-            render(value, record, index) {
-                return <>
-                    <Button title="Delete" icon={<DeleteOutlined />} onClick={() => { deleteRow(index) }}></Button>
-                </>
-            },
-        } : {},
+        signDocument !== null ?
+            signDocument.status === 'draft' && editting ? {
+                title: '',
+                dataIndex: 'action',
+                key: 'action',
+                render(value, record, index) {
+                    return <>
+                        <Button title="Delete" icon={<DeleteOutlined />} onClick={() => { deleteRow(index) }}></Button>
+                    </>
+                },
+            } : {}
+            : {},
     ];
     const deleteRow = (index: number) => {
         if (window.confirm("Bạn có xóa dòng này?")) {
-            console.log(index)
+            //console.log(index)
             const dataCoppy = dataDetail?.filter((_, i) => i !== index)
-            console.log(dataCoppy)
+            //console.log(dataCoppy)
             setDataDetail(dataCoppy)
         }
     }
@@ -243,7 +247,7 @@ const SignDocumentDetail = () => {
         })
     }
     const handleChangeLeaveType = (index: number, value: number) => {
-        console.log(temporary_leave_type)
+        //console.log(temporary_leave_type)
         const type = temporary_leave_type?.find((item) => item.id === value) as ITemporaryLeaveType || undefined
         const rowIndex = dataDetail?.at(index) as DataTemporaryLeaveLine
 
@@ -293,16 +297,16 @@ const SignDocumentDetail = () => {
                     await executeAction(() => update_temporary_leave(temporary_leave[0].id, reasonLeave), true)
                 }
             }
-            console.log(dataDetail?.map((item) => item.key))
+            //console.log(dataDetail?.map((item) => item.key))
             if (temporary_leave_line) {
                 temporary_leave_line?.map(async (line) => {
                     const dataItem = dataDetail?.find((item) => item.key === line.id) as DataTemporaryLeaveLine || null
                     if (dataItem === null) {
-                        console.log('delete' + line.id)
+                        //console.log('delete' + line.id)
                         await executeAction(() => delete_temporary_leave_line(line.id), true)
                     }
                     else {
-                        console.log('update' + line.id)
+                        //console.log('update' + line.id)
                         await executeAction(() => update_temporary_leave_line(
                             dataItem.key,
                             dataItem.range_date ? convertDateToString(dataItem.range_date[0]) : '',
@@ -364,9 +368,21 @@ const SignDocumentDetail = () => {
     const handleChangeReasonLeave = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setReasonLeave(e.target.value)
     }
+
     useEffect(() => {
-        console.log(temporary_leave_line)
-        console.log(temporary_leave)
+        if (signDocument !== null) {
+            //console.log('load')
+            fetchDocumentStage()
+            fetchDocumentStageAction()
+            fetchCurrentStageAction()
+            fetchTemporaryLeave(signDocument.id)
+            fetchTemporaryLeaveLine(signDocument.id)
+        }
+    }, [id])
+
+    useEffect(() => {
+        //console.log(temporary_leave_line)
+        //console.log(temporary_leave)
         const lines =
             temporary_leave_line !== null ? temporary_leave_line?.map<DataTemporaryLeaveLine>((item) => {
                 return {
@@ -383,11 +399,14 @@ const SignDocumentDetail = () => {
 
     useEffect(() => {
         if (temporary_leave) {
-            setReasonLeave(temporary_leave[0].reason_leaving)
+            if (temporary_leave.length > 0) {
+                //console.log(temporary_leave)
+                setReasonLeave(temporary_leave[0].reason_leaving)
+            }
         } else {
             setReasonLeave('')
         }
-    }, [])
+    }, [temporary_leave])
     useEffect(() => {
         getCurrentStageAction()
     }, [current_satge_action_ids])
@@ -401,30 +420,36 @@ const SignDocumentDetail = () => {
                         ? <Empty /> :
                         <>
                             <div style={{
-                                paddingBottom: '20px',
+                                paddingBottom: '24px',
                             }}>
-                                <Button title="Trở về" icon={<LeftOutlined />} onClick={() => { navigate(-1) }} /> {signDocument.name}
-
+                                <Row>
+                                    <Col xs={24} sm={4} md={2} lg={2} xl={2}>
+                                        <Button title="Trở về" icon={<LeftOutlined />} onClick={async () => { navigate(-1) }} />
+                                    </Col>
+                                    <Col xs={24} sm={24} md={22} lg={22} xl={22}>
+                                        {signDocument.name}
+                                    </Col>
+                                </Row>
                             </div>
                             <div style={{
-                                paddingBottom: '20px',
+                                paddingBottom: '24px',
                             }}>
                                 <Row>
                                     {editting ?
-                                        <>
-                                            <Col span={2}>
-                                                <Button onClick={handleUpdate} icon={<CheckOutlined />} color="primary" variant="solid">Lưu</Button>
+                                        <Row style={{ justifyContent: 'space-between' }}>
+                                            <Col xs={24} sm={10} md={10} lg={5} xl={5}>
+                                                <Button onClick={handleUpdate} icon={<CheckOutlined />} color="primary" variant="solid" style={{ marginBottom: '5px' }}>Lưu</Button>
                                             </Col>
-                                            <Col span={2}>
+                                            <Col xs={24} sm={10} md={10} lg={5} xl={5}>
                                                 <Button onClick={btnCancel} icon={<CloseOutlined />} color="danger" variant="solid">Hủy bỏ</Button>
                                             </Col>
-                                        </>
+                                        </Row>
                                         :
-                                        <>
+                                        signDocument.status === 'draft' ? <>
                                             <Button onClick={() => {
                                                 setEditting(true)
                                             }} icon={<EditOutlined />} color="primary" variant="solid">Cập nhật</Button>
-                                        </>
+                                        </> : <></>
                                     }
                                 </Row>
                             </div>
@@ -432,109 +457,137 @@ const SignDocumentDetail = () => {
                                 <TabPane tab="Thực hiện" key="1">
                                     <>
                                         <Divider orientation="left" style={{ borderColor: colors.border }}>
-                                            <b style={{ fontSize: 20 }}>Information</b>
+                                            <b style={{ fontSize: 24 }}>Information</b>
                                         </Divider>
-                                        <Row>
-                                            <Col span={6}>
-                                                <b>Code</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.name_seq}
-                                            </Col>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Mã:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.name_seq}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Trạng thái:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.status}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Ngày gửi:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.sent_date}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Công ty: </b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.company_id[1]}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Người đề nghị:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.employee_request[1]}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Phòng/Ban:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.department_employee_request[1]}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Chức vụ:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.job_position_employee_request[1]}
+                                                </Col>
+                                            </Row>
+                                        </div>
+                                        <div style={{ paddingBottom: '10px' }}>
+                                            <Row>
+                                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                    <b>Mẫu tài liệu:</b>
+                                                </Col>
+                                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                    {signDocument.document_detail[1]}
+                                                </Col>
+                                            </Row>
+                                        </div>
 
-                                            <Col span={6}>
-                                                <b>Status</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.status}
-                                            </Col>
 
-                                            <Col span={6}>
-                                                <b>Sent date</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.sent_date}
-                                            </Col>
-
-                                            <Col span={6}>
-                                                <b>Company</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.company_id[1]}
-                                            </Col>
-
-                                            <Col span={6}>
-                                                <b>Request</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.employee_request[1]}
-                                            </Col>
-
-                                            <Col span={6}>
-                                                <b>Department</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.department_employee_request[1]}
-                                            </Col>
-
-                                            <Col span={6}>
-                                                <b>Job Position</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.job_position_employee_request[1]}
-                                            </Col>
-
-                                            <Col span={6}>
-                                                <b>Document Template</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.document_detail[1]}
-                                            </Col>
-
-                                            <Col span={6}>
-                                                <b>Name</b>
-                                            </Col>
-                                            <Col span={18}>
-                                                {signDocument.name}
-                                            </Col>
-                                        </Row>
                                         {signDocument.document_detail[0] === 7 ?
                                             <>
                                                 <Divider orientation="left" style={{ borderColor: colors.border }}>
-                                                    <b style={{ fontSize: 20 }}>ĐƠN XIN PHÉP NGHỈ</b>
+                                                    <b style={{ fontSize: 24 }}>ĐƠN XIN PHÉP NGHỈ</b>
                                                 </Divider>
-                                                <Row>
-                                                    <Col span={6}>
-                                                        <b>Lý do nghỉ việc: </b>
-                                                    </Col>
-                                                    <Col span={18}>
-                                                        <TextArea
-                                                            autoSize={{ minRows: 3, maxRows: 6 }}
-                                                            style={{ width: '50%' }}
-                                                            value={reasonLeave}
-                                                            onChange={(e) => {
-                                                                handleChangeReasonLeave(e)
-                                                            }}
-                                                        />
-                                                    </Col>
-                                                    <Col span={6}>
-                                                        <div style={{ paddingTop: '20px' }}>
-                                                            <b>Chi tiết: </b>
-                                                        </div>
-                                                    </Col>
-                                                    <Col span={18}>
-                                                        <Table columns={columnsDetail} dataSource={dataDetail} pagination={false} />
-                                                        {signDocument.status === 'draft' && editting ?
-                                                            <Button style={{
-                                                                borderRadius: '20px',
-                                                                marginTop: '5px',
-                                                            }} type="dashed" icon={<PlusCircleFilled />} onClick={handelAddRow}>Thêm dòng</Button>
-                                                            : <></>}
-                                                    </Col>
-                                                </Row>
+
+                                                <div style={{
+                                                    paddingBottom: '10px'
+                                                }}>
+                                                    <Row>
+                                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                            <b>Lý do nghỉ việc: </b>
+                                                        </Col>
+                                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                            <TextArea
+                                                                autoSize={{ minRows: 3, maxRows: 6 }}
+                                                                // style={{  }}
+                                                                value={reasonLeave}
+                                                                readOnly={!editting}
+                                                                onChange={(e) => {
+                                                                    handleChangeReasonLeave(e)
+                                                                }}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                </div>
+                                                <div style={{ paddingBottom: '10px' }}>
+                                                    <Row>
+                                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                            <div style={{ paddingTop: '24px' }}>
+                                                                <b>Chi tiết: </b>
+                                                            </div>
+                                                        </Col>
+                                                        <Col xs={24} sm={24} md={24} lg={18} xl={18}>
+                                                            <Table columns={columnsDetail} dataSource={dataDetail} pagination={false} />
+                                                            {signDocument.status === 'draft' && editting ?
+                                                                <Button style={{
+                                                                    borderRadius: '24px',
+                                                                    marginTop: '5px',
+                                                                }} type="dashed" icon={<PlusCircleFilled />} onClick={handelAddRow}>Thêm dòng</Button>
+                                                                : <></>}
+                                                        </Col>
+                                                    </Row>
+                                                </div>
                                             </> : <></>}
                                         {current_satge_action.length !== 0 && !editting ? <div style={{
-                                            paddingTop: '20px'
+                                            paddingTop: '24px'
                                         }}>
                                             <Table
                                                 columns={columns}
