@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, GetProp, Menu, MenuProps, Image, Flex } from "antd";
 import Layout, { Content, Header } from "antd/es/layout/layout";
