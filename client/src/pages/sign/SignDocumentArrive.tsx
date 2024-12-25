@@ -89,8 +89,8 @@ const SignDocumentArrive = () => {
         setStatus('all')
         fetchDocumentArrive()
     }, [])
-    if (loading) return (<PageLoading />)
-    return (
+    // if (loading) return (<PageLoading />)
+    return loading ? <PageLoading /> : (
         <>
             <MainLayout title="Văn bản đến">
 
@@ -111,8 +111,6 @@ const SignDocumentArrive = () => {
                         </div>
                     </Col>
                 </Row>
-
-
                 <List
                     itemLayout="horizontal"
                     dataSource={signDocument || []}
