@@ -92,7 +92,6 @@ const SignDocumentDetail = () => {
                 showErrorMessage('Vui lòng nhập lý do nghỉ việc')
                 return false
             }
-
             let valid = true
             dataDetail?.map((item) => {
                 if (item.date_type && item.leave_type && item.range_date) {
@@ -112,11 +111,23 @@ const SignDocumentDetail = () => {
 
     const handleConfirmAction = async (id: number) => {
         // console.log(dataDetail.length)
-        if (dataDetail && dataDetail.length > 0 && checkValid()) {
-            await executeAction(() => confirm_action(id), true)
-            fetchDocumentById()
-            fetchDocumentStage()
-            fetchCurrentStageAction()
+        if (checkValid()) {
+            if (signDocument.document_detail[0] === 7) {
+                if (dataDetail?.length === 0) {
+                    showErrorMessage('Vui lòng nhập đầy đủ thông tin chi tiết trước khi gửi văn bản.')
+                    return false;
+                } else {
+                    await executeAction(() => confirm_action(id), true)
+                    fetchDocumentById()
+                    fetchDocumentStage()
+                    fetchCurrentStageAction()
+                }
+            } else {
+                await executeAction(() => confirm_action(id), true)
+                fetchDocumentById()
+                fetchDocumentStage()
+                fetchCurrentStageAction()
+            }
         } else {
             showErrorMessage('Vui lòng nhập đầy đủ thông tin chi tiết trước khi gửi văn bản.')
         }

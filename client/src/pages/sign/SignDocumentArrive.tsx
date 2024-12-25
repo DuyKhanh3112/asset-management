@@ -1,9 +1,8 @@
-import { colors, myColor } from "constants/color";
+/* eslint-disable react-hooks/exhaustive-deps */
 import { ISignDocument } from "interfaces";
 import { RootState } from "stores/reducers";
 import { useSelector } from "react-redux";
-import { Avatar, Badge, Card, Col, Empty, List, Menu, Row, Select, Tabs } from "antd";
-import { IUser } from "interfaces/user";
+import { Badge, Card, Col, List, Row, Select } from "antd";
 import MainLayout from "components/app/MainLayout";
 import useAsyncAction from "hooks/useAsyncAction";
 import { get_document_arrive, get_document_arrive_await, get_document_arrive_done, get_document_arrive_process } from "stores/actions/sign_document";
@@ -13,17 +12,15 @@ import { get_document_stage } from "stores/actions/document_stage";
 import { get_document_stage_action } from "stores/actions/document_stage_action";
 import { get_current_stage_action } from "stores/actions/current_satge_action";
 import PageLoading from "widgets/PageLoading";
-import TabPane from "antd/es/tabs/TabPane";
 import { get_temporary_leave } from "stores/actions/temporary_leave";
 import { get_temporary_leave_line } from "stores/actions/temporary_leave_line";
 
 const SignDocumentArrive = () => {
     const signDocument = useSelector((state: RootState) => state.sign_document?.data) as ISignDocument[] | null;
-    const user = useSelector((state: RootState) => state.users?.data) as IUser | null;
+    // const user = useSelector((state: RootState) => state.users?.data) as IUser | null;
     const { executeAction, loading } = useAsyncAction();
     const navigate = useNavigate()
     const [status, setStatus] = useState('all');
-    const [listSign, setListSign] = useState<ISignDocument[] | null>([])
 
     const fetchDocumentStage = async (id: number) => {
         await executeAction(() => get_document_stage(id), true)
@@ -91,8 +88,8 @@ const SignDocumentArrive = () => {
     useEffect(() => {
         setStatus('all')
         fetchDocumentArrive()
-    }, [user])
-    // if (loading) return (<PageLoading />)
+    }, [])
+    if (loading) return (<PageLoading />)
     return (
         <>
             <MainLayout title="Văn bản đến">
