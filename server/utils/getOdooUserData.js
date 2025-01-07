@@ -768,19 +768,75 @@ export async function getTemporaryLeaveLine(odoo, id) {
   })
 }
 
-export async function createSignDocument(odoo, user, name, employee_request, document_detail, reason_leaving) {
+export async function getAdvancePaymentRequest(odoo, id) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ['sea_sign_document_id.id', '=', id]
+    ]);
+    inParams.push([
+      'id',
+      'payment_date',
+      'amount',
+      'partner_id',
+      'advance_payment_description',
+      'advance_payment_method',
+      'sea_sign_document_id',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.advance.payment.request", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+
+export async function createSignDocument(odoo, user, name, employee_request, document_detail,
+  reason_leaving,
+  partner_id, payment_amount, advance_payment_description, advance_payment_method,) {
   return new Promise((resolve, reject) => {
     var inParams = [];
-    inParams.push({
-      "id": 0,
-      "name": name,
-      "employee_request": employee_request,
-      "user_creator": user[0].id,
-      "company_id": user[0].company_id[0],
-      "document_detail": document_detail,
-      "status": 'draft',
-      "reason_leaving_compute": reason_leaving,
-    })
+    if (document_detail == 7) {
+      inParams.push({
+        "id": 0,
+        "name": name,
+        "employee_request": employee_request,
+        "user_creator": user[0].id,
+        "company_id": user[0].company_id[0],
+        "document_detail": document_detail,
+        "status": 'draft',
+        "reason_leaving_compute": reason_leaving,
+      })
+    } else if (document_detail == 9) {
+      inParams.push({
+        "id": 0,
+        "name": name,
+        "employee_request": employee_request,
+        "user_creator": user[0].id,
+        "company_id": user[0].company_id[0],
+        "document_detail": document_detail,
+        "status": 'draft',
+        "partner_id": partner_id,
+        "payment_amount": payment_amount,
+        "advance_payment_description": advance_payment_description,
+        "advance_payment_method": advance_payment_method,
+      })
+    } else {
+      inParams.push({
+        "id": 0,
+        "name": name,
+        "employee_request": employee_request,
+        "user_creator": user[0].id,
+        "company_id": user[0].company_id[0],
+        "document_detail": document_detail,
+      })
+    }
     var params = [];
     params.push(inParams);
     odoo.execute_kw("sea.sign.document", 'create', params, (err, assets) => {
@@ -876,6 +932,56 @@ export async function updateTemporaryLeave(odoo, id, reason_leaving) {
     var params = [];
     params.push(inParams);
     odoo.execute_kw("sea.sign.temporary.leave", 'write', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+export async function getResPartner(odoo, user) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ["company_id", "=", user[0].company_id[0]],
+    ]);
+    inParams.push([
+      'id',
+      'name',
+      'email',
+      'user_id',
+      'company_id',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("res.partner", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+export async function updateAdvancePaymentRequest(odoo, id, amount, advance_payment_description, advance_payment_method, partner_id) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    inParams.push([id]);
+    inParams.push({
+      "partner_id": partner_id,
+      "advance_payment_description": advance_payment_description,
+      "advance_payment_method": advance_payment_method,
+      "amount": amount,
+    })
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.advance.payment.request", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
         console.log(err)

@@ -27,6 +27,7 @@ import asset from 'images/asset.png';
 import document from 'images/documentation.png';
 import document_away from 'images/document_away.png';
 import document_arrive from 'images/document_arrive.png'
+import { get_res_partner } from "stores/actions/res_partner";
 
 
 type MainLayoutProps = {
@@ -66,6 +67,10 @@ const MainLayout: FC<MainLayoutProps> = ({
     const fetchEmployeeMultiCompany = async () => {
         await executeAction(() => get_employee_multi(), true)
     }
+    const fetchResPartner = async () => {
+        await executeAction(() => get_res_partner(), true)
+    }
+
 
     const fetchUser = async () => {
         await executeAction(() => get_users(), true)
@@ -91,12 +96,13 @@ const MainLayout: FC<MainLayoutProps> = ({
     const gotoAsset = () => {
         navigate(`/`);
     }
-    const fetchSignDetail = async () => {
+    const fetchDocumentDetail = async () => {
         await executeAction(() => get_sign_detail(), true)
     }
     const fetchDataDocument = async () => {
+        fetchResPartner()
         await fetchTemporaryLeaveType()
-        await fetchSignDetail()
+        await fetchDocumentDetail()
     }
     const gotoDocumentAway = async () => {
         setIsChange(true)
@@ -133,6 +139,7 @@ const MainLayout: FC<MainLayoutProps> = ({
         await executeAction(() => change_company(id), true);
         fetchUser()
         fetchEmployeeMultiCompany()
+        fetchResPartner()
         setIsChange(false)
         setOpenDrawer(false)
         if (location.pathname === '/document_away') {

@@ -146,11 +146,19 @@ interface DataTemporaryLeaveLine {
 }
 export const create_sign_document = (
     name: string,
-    employee_request: number, document_detail: number, reason_leaving?: string) => {
+    employee_request: number, document_detail: number,
+    reason_leaving?: string,
+    partner_id?: number,
+    payment_amount?: number,
+    advance_payment_description?: string,
+    advance_payment_method?: string,
+) => {
     return async (dispatch: AppDispatch) => {
         dispatch(getSignDocuments.request());
         try {
-            const response = await createSignDocumentApi(name, employee_request, document_detail, reason_leaving);
+            const response = await createSignDocumentApi(name, employee_request, document_detail,
+                reason_leaving,
+                partner_id, payment_amount, advance_payment_description, advance_payment_method);
             if (response.status !== 200) {
                 dispatch(getSignDocuments.failure(null));
                 return { success: false, message: response.data?.msg };

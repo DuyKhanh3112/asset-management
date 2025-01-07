@@ -54,6 +54,10 @@ export function getTemporaryLeaveApi(id: number) {
     return instance.get(`/api/get-temporary-leave/${id}`)
 }
 
+export function getAdvancePaymentRequestApi(id: number) {
+    return instance.get(`/api/get-advance-payment-request/${id}`)
+}
+
 export function getTemporaryLeaveLineApi(id: number) {
     return instance.get(`/api/get-temporary-leave-line/${id}`)
 }
@@ -62,12 +66,21 @@ export function createSignDocumentApi(
     name_doc: string,
     employee_request_id: number,
     document_detail_id: number,
-    reason_leaving?: string) {
+    reason_leaving?: string,
+    partner_id?: number,
+    amount?: number,
+    advance_payment_description?: string,
+    advance_payment_method?: string,
+) {
     return instance.post("/api/create-document", {
         "name": name_doc,
         "employee_request": employee_request_id,
         "document_detail": document_detail_id,
         "reason_leaving": reason_leaving ? reason_leaving : '',
+        "partner_id": partner_id ? partner_id : 0,
+        "amount": amount ? amount : 0,
+        "advance_payment_description": advance_payment_description ? advance_payment_description : '',
+        "advance_payment_method": advance_payment_method ? advance_payment_method : '',
     })
 }
 
@@ -120,5 +133,21 @@ export function updateTemporaryLeaveApi(
     return instance.post("/api/update-temporary-leave", {
         "id": id,
         "reason_leaving": reason_leaving
+    })
+}
+
+export function updateAdvancePaymentRequestApi(
+    id: number,
+    partner_id: number,
+    amount: number,
+    advance_payment_description: string,
+    advance_payment_method: string,
+) {
+    return instance.post("/api/update-advance-payment-request", {
+        "id": id,
+        "amount": amount,
+        "advance_payment_description": advance_payment_description,
+        "advance_payment_method": advance_payment_method,
+        "partner_id": partner_id
     })
 }

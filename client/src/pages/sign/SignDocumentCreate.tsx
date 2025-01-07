@@ -1,9 +1,9 @@
 import { CheckOutlined, DeleteOutlined, LeftOutlined, PlusCircleFilled } from "@ant-design/icons";
-import { Button, Col, Collapse, DatePicker, DatePickerProps, Divider, Form, GetProp, List, message, Row, Select, Table, TablePaginationConfig, TableProps } from "antd";
+import { Button, Col, Collapse, DatePicker, DatePickerProps, Divider, Form, GetProp, Input, InputNumber, List, message, Row, Select, Table, TablePaginationConfig, TableProps } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import MainLayout from "components/app/MainLayout"
 import { colors } from "constants/color";
-import { ICompany, IEmployeeMultiCompany, ISignDetail, ISignDocument, ITemporaryLeave, ITemporaryLeaveLine, ITemporaryLeaveType } from "interfaces";
+import { ICompany, IEmployeeMultiCompany, IResPartner, ISignDetail, ISignDocument, ITemporaryLeave, ITemporaryLeaveLine, ITemporaryLeaveType } from "interfaces";
 import { IUser } from "interfaces/user";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
@@ -31,6 +31,7 @@ const SignDocumentCreate = () => {
     const sign_detail = useSelector((state: RootState) => state.sign_detail?.data) as ISignDetail[] | null;
     const user = useSelector((state: RootState) => state.users?.data) as IUser[] | null;
     const company = useSelector((state: RootState) => state.companies?.data) as ICompany[] | null;
+    const res_partner = useSelector((state: RootState) => state.res_partner?.data) as IResPartner[] | null;
     const { executeAction, loading } = useAsyncAction();
 
     const [selectEmployee, setSelectEmployee] = useState<IEmployeeMultiCompany>()
@@ -41,6 +42,11 @@ const SignDocumentCreate = () => {
     var temporary_leave_line = useSelector((state: RootState) => state.temporary_leave_line?.data) as ITemporaryLeaveLine[] | null;
 
     const [messageApi, contextHolder] = message.useMessage();
+
+    const [partner_id, setPartnerId] = useState<IResPartner>()
+    const [payment_amount, setPaymentAmount] = useState(0)
+    const [advance_payment_description, setAdvancePaymentDescription] = useState('')
+    const [payment_method, setPaymentMethod] = useState('cash')
 
     const onChangeEmployee = (id: number) => {
         const emp = employee_multi_company?.find((item) => item.id === id) as IEmployeeMultiCompany || null;
@@ -204,26 +210,29 @@ const SignDocumentCreate = () => {
             const detail = sign_detail?.find((item) => item.id === template) as ISignDetail
             const company_short_name = company?.find((item) => item.id === selectEmployee?.company_id[0])?.short_name
             const name = detail.name + ' - ' + company_short_name + ' - ' + selectEmployee?.name[1]
-            const res = await executeAction(() => create_sign_document(name, selectEmployee ? selectEmployee.id : 0, template, reasonLeave), true)
+            const res = await executeAction(() => create_sign_document(name, selectEmployee ? selectEmployee.id : 0, template,
+                reasonLeave, partner_id ? partner_id.id : 0, payment_amount, advance_payment_description, payment_method), true)
             if (res?.data) {
                 id = res?.data
-                // fetchTemporary(res.data)
-                const resLeave = await executeAction(() => get_temporary_leave(res.data), true)
-                // const document_temporary_leave = temporary_leave?.find((item) => item.sea_sign_document_id[0] === res.data) as ITemporaryLeave || null
-                // console.log(document_temporary_leave)
-                if (resLeave?.data) {
-                    data?.map(async (line) => {
-                        console.log(line)
-                        await executeAction(() => create_temporary_leave_line(
-                            line.rangeDate ? convertDateToString(line.rangeDate[0]) : '',
-                            line.rangeDate ? convertDateToString(line.rangeDate[1]) : '',
-                            line.num_date ? line.num_date : 0,
-                            line.leaveType ? line.leaveType.id : 0,
-                            line.dateType ? line.dateType : '',
-                            resLeave?.data[0].id,
-                            res?.data,
-                        ), true)
-                    })
+                if (template === 7) {
+                    const resLeave = await executeAction(() => get_temporary_leave(res.data), true)
+                    if (resLeave?.data) {
+                        data?.map(async (line) => {
+                            console.log(line)
+                            await executeAction(() => create_temporary_leave_line(
+                                line.rangeDate ? convertDateToString(line.rangeDate[0]) : '',
+                                line.rangeDate ? convertDateToString(line.rangeDate[1]) : '',
+                                line.num_date ? line.num_date : 0,
+                                line.leaveType ? line.leaveType.id : 0,
+                                line.dateType ? line.dateType : '',
+                                resLeave?.data[0].id,
+                                res?.data,
+                            ), true)
+                        })
+                    }
+                }
+                if (template === 9) {
+                    console.log('tạm ứng')
                 }
             }
             setReasonLeave('')
@@ -268,6 +277,20 @@ const SignDocumentCreate = () => {
                 return false
             }
         }
+        if (template === 9) {
+            if (partner_id === undefined) {
+                showErrorMessage('Vui lòng chọn đối tác')
+                return false
+            }
+            if (payment_amount === 0) {
+                showErrorMessage('Vui lòng nhập số tiền')
+                return false
+            }
+            if (advance_payment_description === '') {
+                showErrorMessage('Vui lòng nhập lý do tạm ứng')
+                return false
+            }
+        }
         return true
     }
 
@@ -286,6 +309,11 @@ const SignDocumentCreate = () => {
     const handleChangeReasonLeave = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setReasonLeave(e.target.value)
     }
+
+    const handleChangeResPartner = (value: number) => {
+        const partner = res_partner?.find((item) => item.id === value) as IResPartner || null
+        setPartnerId(partner)
+    }
     return (
         <>
             {contextHolder}
@@ -294,108 +322,115 @@ const SignDocumentCreate = () => {
                     <div style={{
                         paddingBottom: '20px'
                     }}>
-                        <Row>
-                            <Col span={2}>
-                                <Button title="Trở lại" icon={<LeftOutlined />} onClick={() => { navigate(-1) }} >Trở lại</Button>
-                            </Col>
-                            <Col span={2}>
-                                <Button type="primary" icon={<CheckOutlined />} onClick={handleSubmit}>Lưu</Button>
-                            </Col>
-                        </Row>
+                        <div style={{
+                            paddingBottom: '24px',
+                        }}>
+                            <Row>
+                                <Col xs={24} sm={6} md={6} lg={4} xl={3}>
+                                    <Button title="Trở lại" icon={<LeftOutlined />} onClick={() => { navigate(-1) }} >Trở lại</Button>
+                                </Col>
+                                <Col xs={24} sm={6} md={6} lg={4} xl={3}>
+                                    <Button type="primary" icon={<CheckOutlined />} onClick={handleSubmit}>Lưu</Button>
+                                </Col>
+                            </Row>
+                        </div>
                     </div>
                     <div>
-                        <Divider orientation="left" style={{ borderColor: colors.border }}>
-                            <b style={{ fontSize: 20 }}>INFORMATION</b>
-                        </Divider>
-                        <div style={{ paddingBottom: '10px' }}>
-                            <Row>
-                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                    <b>Người đề nghị:</b>
-                                </Col>
-                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                    <Select
-                                        showSearch
-                                        placeholder="Select a employee"
-                                        optionFilterProp="label"
-                                        style={{ width: '50%' }}
-                                        onChange={(value: number) => { onChangeEmployee(value) }}
-                                        options={employee_multi_company === null ? [] :
-                                            employee_multi_company?.map((item) => {
-                                                return {
-                                                    value: item.id,
-                                                    label: item.s_identification_id + ' - ' + item.name[1],
-                                                }
-                                            })
-                                        }
-                                    />
-                                </Col>
-                            </Row>
+                        <div>
+                            <Divider orientation="left" style={{ borderColor: colors.border }}>
+                                <b style={{ fontSize: 20 }}>INFORMATION</b>
+                            </Divider>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                        <b>Người đề nghị:</b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={9} lg={9} xl={9}>
+                                        <Select
+                                            showSearch
+                                            placeholder="Select a employee"
+                                            optionFilterProp="label"
+                                            style={{ width: '100%' }}
+                                            onChange={(value: number) => { onChangeEmployee(value) }}
+                                            options={employee_multi_company === null ? [] :
+                                                employee_multi_company?.map((item) => {
+                                                    return {
+                                                        value: item.id,
+                                                        label: item.s_identification_id + ' - ' + item.name[1],
+                                                    }
+                                                })
+                                            }
+                                        />
+                                    </Col>
+                                </Row>
+                            </div>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                        <b>Mã SC: </b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                        {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.s_identification_id}
+                                    </Col>
+                                </Row>
+                            </div>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                        <b>Phòng/Ban: </b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                        {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.department_id[1]}
+                                    </Col>
+                                </Row>
+                            </div>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                        <b>Chức vụ: </b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                        {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.job_id[1]}
+                                    </Col>
+                                </Row>
+                            </div>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                        <b>Công ty: </b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                        {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.company_id[1]}
+                                    </Col>
+                                </Row>
+                            </div>
+                            <div style={{ paddingBottom: '10px' }}>
+                                <Row>
+                                    <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                        <b>Mẫu Tài liệu: </b>
+                                    </Col>
+                                    <Col xs={24} sm={24} md={9} lg={9} xl={9}>
+                                        <Select
+                                            showSearch
+                                            placeholder="Select a template"
+                                            optionFilterProp="label"
+                                            style={{ width: '100%' }}
+                                            onChange={(value: number) => { onChangeTemplate(value) }}
+                                            onSearch={() => { }}
+                                            options={
+                                                sign_detail?.map((item) => {
+                                                    return {
+                                                        label: item.name,
+                                                        value: item.id,
+                                                    }
+                                                })
+                                            }
+                                        />
+                                    </Col>
+                                </Row>
+                            </div>
                         </div>
-                        <div style={{ paddingBottom: '10px' }}>
-                            <Row>
-                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                    <b>Mã SC: </b>
-                                </Col>
-                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.s_identification_id}
-                                </Col>
-                            </Row>
-                        </div>
-                        <div style={{ paddingBottom: '10px' }}>
-                            <Row>
-                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                    <b>Phòng/Ban: </b>
-                                </Col>
-                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.department_id[1]}
-                                </Col>
-                            </Row>
-                        </div>
-                        <div style={{ paddingBottom: '10px' }}>
-                            <Row>
-                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                    <b>Chức vụ: </b>
-                                </Col>
-                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.job_id[1]}
-                                </Col>
-                            </Row>
-                        </div>
-                        <div style={{ paddingBottom: '10px' }}>
-                            <Row>
-                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                    <b>Công ty: </b>
-                                </Col>
-                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.company_id[1]}
-                                </Col>
-                            </Row>
-                        </div>
-                        <div style={{ paddingBottom: '10px' }}>
-                            <Row>
-                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                    <b>Mẫu Tài liệu: </b>
-                                </Col>
-                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                    <Select
-                                        showSearch
-                                        placeholder="Select a template"
-                                        optionFilterProp="label"
-                                        style={{ width: '50%' }}
-                                        onChange={(value: number) => { onChangeTemplate(value) }}
-                                        onSearch={() => { }}
-                                        options={
-                                            sign_detail?.map((item) => {
-                                                return {
-                                                    label: item.name,
-                                                    value: item.id,
-                                                }
-                                            })
-                                        }
-                                    />
-                                </Col>
-                            </Row>
-                        </div>
+                        {/* đơn xin phép nghỉ id=7*/}
                         {template === 7 ?
                             <>
                                 <Divider orientation="left" style={{ borderColor: colors.border }}>
@@ -439,6 +474,90 @@ const SignDocumentCreate = () => {
                                         </Col>
                                     </Row>
                                 </div>
+                            </>
+                            : <></>}
+                        {/* tạm ứng id=9 */}
+                        {template === 9 ?
+                            <>
+                                <Divider orientation="left" style={{ borderColor: colors.border }}>
+                                    <b style={{ fontSize: 20 }}>Đề Nghị Tạm Ứng</b>
+                                </Divider>
+                                <div style={{
+                                    paddingBottom: '10px'
+                                }}>
+                                    <Row>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <b>Thanh toán cho: </b>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                            <Select
+                                                style={{ width: '100%' }}
+                                                onChange={(value: number) => { handleChangeResPartner(value) }}
+                                                options={
+                                                    res_partner?.map((item) => {
+                                                        return {
+                                                            value: item.id,
+                                                            label: item.name,
+                                                        }
+                                                    })
+                                                }
+                                            />
+                                        </Col>
+                                    </Row>
+                                    <Row style={{ paddingTop: '10px' }}>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <b>Số tiền: </b>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                            <InputNumber
+                                                style={{ width: '100%' }}
+                                                // required={true}
+                                                value={payment_amount ?? 0}
+                                                onChange={(value) => {
+                                                    if (value === null) {
+                                                        setPaymentAmount(0)
+                                                    } else {
+                                                        setPaymentAmount(value)
+                                                    }
+                                                }}
+                                                formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                            // parser={value => value ? value.replace(/₫\s?|(,*)/g, '') : ''}
+                                            />
+                                        </Col>
+                                    </Row>
+                                    <Row style={{ paddingTop: '10px' }}>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <b>Lý do tạm ứng: </b>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                            <TextArea
+                                                autoSize={{ minRows: 3, maxRows: 6 }}
+                                                // style={{ width: '50%' }}
+                                                value={advance_payment_description}
+                                                onChange={(e) => {
+                                                    setAdvancePaymentDescription(e.target.value)
+                                                }}
+                                            />
+                                        </Col>
+                                    </Row>
+                                    <Row style={{ paddingTop: '10px' }}>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <b>Hình thức thanh toán: </b>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                            <Select
+                                                style={{ width: '100%' }}
+                                                defaultValue={payment_method}
+                                                onChange={(value: string) => { setPaymentMethod(value) }}
+                                                options={[
+                                                    { value: 'cash', label: 'Chuyển khoản' },
+                                                    { value: 'bank', label: 'Tiền mặt' },
+                                                ]}
+                                            />
+                                        </Col>
+                                    </Row>
+                                </div>
+
                             </>
                             : <></>}
                     </div>

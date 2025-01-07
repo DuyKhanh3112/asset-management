@@ -19,6 +19,7 @@ const SignDocumentAway = () => {
     const navigate = useNavigate()
     const [status, setStatus] = useState('all')
 
+
     const chooseDocument = async (id: number) => {
         navigate(`/document_detail/${id}`)
     }
@@ -38,6 +39,7 @@ const SignDocumentAway = () => {
     const fetchDocumentAway = async () => {
         await executeAction(() => get_document_away(), true)
     }
+
 
     useEffect(() => {
         fetchDocumentAway()

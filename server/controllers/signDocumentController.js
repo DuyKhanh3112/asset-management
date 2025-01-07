@@ -1,5 +1,5 @@
 import user from "../models/user.js";
-import { getSignDocumentAway, getSignDocumentArrive, getSignDocumentById, getSignDocumentStage, getCurrentStageAction, getSignDocumentStageAction, getSignDocumentArriveDone, getSignDocumentArriveProcess, getSignDocumentArriveAwait, confirmActionDocument, getTemporaryLeaveType, getSignDetailModelLink, getTemporaryLeave, getTemporaryLeaveLine, createSignDocument, createTemporaryLeaveLine, deleteTemporaryLeaveLine, updateTemporaryLeaveLine, updateTemporaryLeave } from "../utils/getOdooUserData.js";
+import { getSignDocumentAway, getSignDocumentArrive, getSignDocumentById, getSignDocumentStage, getCurrentStageAction, getSignDocumentStageAction, getSignDocumentArriveDone, getSignDocumentArriveProcess, getSignDocumentArriveAwait, confirmActionDocument, getTemporaryLeaveType, getSignDetailModelLink, getTemporaryLeave, getTemporaryLeaveLine, createSignDocument, createTemporaryLeaveLine, deleteTemporaryLeaveLine, updateTemporaryLeaveLine, updateTemporaryLeave, getAdvancePaymentRequest, updateAdvancePaymentRequest } from "../utils/getOdooUserData.js";
 
 export const signDocumentCtl = {
     getSignDocumentById: async (req, res) => {
@@ -114,6 +114,16 @@ export const signDocumentCtl = {
             res.status(500).json({ msg: error.message })
         }
     },
+    getAdvancePaymentRequest: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const data = await getAdvancePaymentRequest(req.odoo, id);
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+
     getTemporaryLeaveLine: async (req, res) => {
         try {
             const { id } = req.params;
@@ -127,8 +137,10 @@ export const signDocumentCtl = {
     createDocument: async (req, res) => {
         try {
             // console.log(req)
-            const { name, employee_request, document_detail, reason_leaving } = req.body;
-            const data = await createSignDocument(req.odoo, req.user, name, employee_request, document_detail, reason_leaving);
+            const { name, employee_request, document_detail, reason_leaving, partner_id, amount, advance_payment_description, advance_payment_method } = req.body;
+            const data = await createSignDocument(req.odoo, req.user, name, employee_request, document_detail,
+                reason_leaving,
+                partner_id, amount, advance_payment_description, advance_payment_method);
             res.status(200).json({ data })
         } catch (error) {
             console.log(error)
@@ -177,6 +189,16 @@ export const signDocumentCtl = {
             res.status(500).json({ msg: error.message })
         }
     },
+    updateAdvancePaymentRequest: async (req, res) => {
+        try {
+            const { id, amount, advance_payment_description, advance_payment_method, partner_id } = req.body;
+            const data = await updateAdvancePaymentRequest(req.odoo, id, amount, advance_payment_description, advance_payment_method, partner_id);
+            res.status(200).json({ data })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ msg: error.message })
+        }
+    }
 }
 
 export default signDocumentCtl
