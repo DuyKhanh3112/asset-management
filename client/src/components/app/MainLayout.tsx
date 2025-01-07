@@ -219,18 +219,23 @@ const MainLayout: FC<MainLayoutProps> = ({
         getMyCurrentCompanyShortName();
     }, [user, companies])
 
-    if (isChange) return (<PageLoading />);
+    // if (isChange) return (<PageLoading />);
 
     return (
         <>
             <Layout style={{ height: '100vh' }} >
-                <Sider width='250px' trigger={
-                    <Menu
-                        // style={{ backgroundColor: colors.white }}
-                        theme="dark"
-                        defaultSelectedKeys={['2']}
-                        items={menuTrigger} />
-                }
+                <Sider width='250px'
+                    trigger={
+                        <Menu
+                            // style={{ backgroundColor: colors.white }}
+                            theme="dark"
+                            defaultSelectedKeys={['2']}
+                            items={menuTrigger} />
+                    }
+                    breakpoint="md"
+                    onBreakpoint={(broken) => {
+                        setCollapsed(broken)
+                    }}
                     collapsible collapsed={collapsed} style={{ backgroundColor: colors.white }} >
 
                     <Image src={logo} style={{ maxHeight: '200px' }} preview={false} alt="" />
@@ -274,7 +279,7 @@ const MainLayout: FC<MainLayoutProps> = ({
                             // borderRadius: '20px'
                         }}
                     >
-                        {children}
+                        {isChange ? <PageLoading /> : children}
                     </Content>
                 </Layout>
             </Layout >

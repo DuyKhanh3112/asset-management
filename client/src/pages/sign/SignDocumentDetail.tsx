@@ -129,6 +129,10 @@ const SignDocumentDetail = () => {
                 fetchDocumentStage()
                 fetchCurrentStageAction()
             }
+            messageApi.open({
+                type: 'success',
+                content: 'Gửi văn bản thành công',
+            });
         } else {
             showErrorMessage('Vui lòng nhập đầy đủ thông tin chi tiết trước khi gửi văn bản.')
         }
@@ -349,6 +353,10 @@ const SignDocumentDetail = () => {
             await fetchTemporaryLeave(signDocument.id)
             await fetchTemporaryLeaveLine(signDocument.id)
             setEditting(false)
+            messageApi.open({
+                type: 'success',
+                content: 'Cập nhật văn bản thành công',
+            });
         }
     }
     const fetchTemporaryLeave = async (id: number) => {
@@ -423,11 +431,11 @@ const SignDocumentDetail = () => {
         getCurrentStageAction()
     }, [current_satge_action_ids])
 
-    return loading ? <PageLoading /> : (
+    return (
         <>
             {contextHolder}
             <MainLayout title={signDocument === null ? '' : signDocument.name}>
-                {
+                {loading ? <PageLoading /> :
                     signDocument == null
                         ? <Empty /> :
                         <>

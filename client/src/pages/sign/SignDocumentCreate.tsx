@@ -10,7 +10,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "stores/reducers";
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, set } from 'date-fns';
 import useAsyncAction from "hooks/useAsyncAction";
 import PageLoading from "widgets/PageLoading";
 import { create_sign_document, get_document_away } from "stores/actions/sign_document";
@@ -228,8 +228,14 @@ const SignDocumentCreate = () => {
             }
             setReasonLeave('')
             setData(undefined)
+            setSelectEmployee(undefined)
+            setTemplate(0)
             fetchDocumentAway()
             fetchTemporaryLine(id)
+            messageApi.open({
+                type: 'success',
+                content: 'Tạo văn bản thành công',
+            });
             console.log(temporary_leave)
             console.log(temporary_leave_line)
         }
@@ -280,161 +286,163 @@ const SignDocumentCreate = () => {
     const handleChangeReasonLeave = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setReasonLeave(e.target.value)
     }
-    return loading ? (<PageLoading />) : (
+    return (
         <>
             {contextHolder}
             <MainLayout title="Tạo văn bản">
-                <div style={{
-                    paddingBottom: '20px'
-                }}>
-                    <Row>
-                        <Col span={2}>
-                            <Button title="Trở lại" icon={<LeftOutlined />} onClick={() => { navigate(-1) }} >Trở lại</Button>
-                        </Col>
-                        <Col span={2}>
-                            <Button type="primary" icon={<CheckOutlined />} onClick={handleSubmit}>Lưu</Button>
-                        </Col>
-                    </Row>
-                </div>
-                <div>
-                    <Divider orientation="left" style={{ borderColor: colors.border }}>
-                        <b style={{ fontSize: 20 }}>INFORMATION</b>
-                    </Divider>
-                    <div style={{ paddingBottom: '10px' }}>
+                {loading ? <PageLoading /> : <>
+                    <div style={{
+                        paddingBottom: '20px'
+                    }}>
                         <Row>
-                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                <b>Người đề nghị:</b>
+                            <Col span={2}>
+                                <Button title="Trở lại" icon={<LeftOutlined />} onClick={() => { navigate(-1) }} >Trở lại</Button>
                             </Col>
-                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                <Select
-                                    showSearch
-                                    placeholder="Select a employee"
-                                    optionFilterProp="label"
-                                    style={{ width: '50%' }}
-                                    onChange={(value: number) => { onChangeEmployee(value) }}
-                                    options={employee_multi_company === null ? [] :
-                                        employee_multi_company?.map((item) => {
-                                            return {
-                                                value: item.id,
-                                                label: item.s_identification_id + ' - ' + item.name[1],
-                                            }
-                                        })
-                                    }
-                                />
+                            <Col span={2}>
+                                <Button type="primary" icon={<CheckOutlined />} onClick={handleSubmit}>Lưu</Button>
                             </Col>
                         </Row>
                     </div>
-                    <div style={{ paddingBottom: '10px' }}>
-                        <Row>
-                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                <b>Mã SC: </b>
-                            </Col>
-                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.s_identification_id}
-                            </Col>
-                        </Row>
+                    <div>
+                        <Divider orientation="left" style={{ borderColor: colors.border }}>
+                            <b style={{ fontSize: 20 }}>INFORMATION</b>
+                        </Divider>
+                        <div style={{ paddingBottom: '10px' }}>
+                            <Row>
+                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                    <b>Người đề nghị:</b>
+                                </Col>
+                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                    <Select
+                                        showSearch
+                                        placeholder="Select a employee"
+                                        optionFilterProp="label"
+                                        style={{ width: '50%' }}
+                                        onChange={(value: number) => { onChangeEmployee(value) }}
+                                        options={employee_multi_company === null ? [] :
+                                            employee_multi_company?.map((item) => {
+                                                return {
+                                                    value: item.id,
+                                                    label: item.s_identification_id + ' - ' + item.name[1],
+                                                }
+                                            })
+                                        }
+                                    />
+                                </Col>
+                            </Row>
+                        </div>
+                        <div style={{ paddingBottom: '10px' }}>
+                            <Row>
+                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                    <b>Mã SC: </b>
+                                </Col>
+                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.s_identification_id}
+                                </Col>
+                            </Row>
+                        </div>
+                        <div style={{ paddingBottom: '10px' }}>
+                            <Row>
+                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                    <b>Phòng/Ban: </b>
+                                </Col>
+                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.department_id[1]}
+                                </Col>
+                            </Row>
+                        </div>
+                        <div style={{ paddingBottom: '10px' }}>
+                            <Row>
+                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                    <b>Chức vụ: </b>
+                                </Col>
+                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.job_id[1]}
+                                </Col>
+                            </Row>
+                        </div>
+                        <div style={{ paddingBottom: '10px' }}>
+                            <Row>
+                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                    <b>Công ty: </b>
+                                </Col>
+                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                    {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.company_id[1]}
+                                </Col>
+                            </Row>
+                        </div>
+                        <div style={{ paddingBottom: '10px' }}>
+                            <Row>
+                                <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                    <b>Mẫu Tài liệu: </b>
+                                </Col>
+                                <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                    <Select
+                                        showSearch
+                                        placeholder="Select a template"
+                                        optionFilterProp="label"
+                                        style={{ width: '50%' }}
+                                        onChange={(value: number) => { onChangeTemplate(value) }}
+                                        onSearch={() => { }}
+                                        options={
+                                            sign_detail?.map((item) => {
+                                                return {
+                                                    label: item.name,
+                                                    value: item.id,
+                                                }
+                                            })
+                                        }
+                                    />
+                                </Col>
+                            </Row>
+                        </div>
+                        {template === 7 ?
+                            <>
+                                <Divider orientation="left" style={{ borderColor: colors.border }}>
+                                    <b style={{ fontSize: 20 }}>ĐƠN XIN PHÉP NGHỈ</b>
+                                </Divider>
+                                <div style={{
+                                    paddingBottom: '10px'
+                                }}>
+                                    <Row>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <b>Lý do nghỉ việc: </b>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                            <TextArea
+                                                autoSize={{ minRows: 3, maxRows: 6 }}
+                                                // style={{ width: '50%' }}
+                                                value={reasonLeave}
+                                                onChange={(e) => {
+                                                    handleChangeReasonLeave(e)
+                                                }}
+                                            />
+                                        </Col>
+                                    </Row>
+                                </div>
+                                <div style={{ paddingBottom: '10px' }}>
+                                    <Row>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <div style={{ paddingTop: '24px' }}>
+                                                <b>Chi tiết: </b>
+                                            </div>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={24} lg={24} xl={18}>
+                                            <Table columns={columns}
+                                                dataSource={data}
+                                                pagination={false}
+                                                style={{ width: '100%' }} />
+                                            <Button style={{
+                                                borderRadius: '20px',
+                                                marginTop: '5px',
+                                            }} type="dashed" icon={<PlusCircleFilled />} onClick={handelAddRow}>Thêm dòng</Button>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            </>
+                            : <></>}
                     </div>
-                    <div style={{ paddingBottom: '10px' }}>
-                        <Row>
-                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                <b>Phòng/Ban: </b>
-                            </Col>
-                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.department_id[1]}
-                            </Col>
-                        </Row>
-                    </div>
-                    <div style={{ paddingBottom: '10px' }}>
-                        <Row>
-                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                <b>Chức vụ: </b>
-                            </Col>
-                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.job_id[1]}
-                            </Col>
-                        </Row>
-                    </div>
-                    <div style={{ paddingBottom: '10px' }}>
-                        <Row>
-                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                <b>Công ty: </b>
-                            </Col>
-                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                {selectEmployee === undefined || selectEmployee === undefined ? '' : selectEmployee.company_id[1]}
-                            </Col>
-                        </Row>
-                    </div>
-                    <div style={{ paddingBottom: '10px' }}>
-                        <Row>
-                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                <b>Mẫu Tài liệu: </b>
-                            </Col>
-                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                <Select
-                                    showSearch
-                                    placeholder="Select a template"
-                                    optionFilterProp="label"
-                                    style={{ width: '50%' }}
-                                    onChange={(value: number) => { onChangeTemplate(value) }}
-                                    onSearch={() => { }}
-                                    options={
-                                        sign_detail?.map((item) => {
-                                            return {
-                                                label: item.name,
-                                                value: item.id,
-                                            }
-                                        })
-                                    }
-                                />
-                            </Col>
-                        </Row>
-                    </div>
-                    {template === 7 ?
-                        <>
-                            <Divider orientation="left" style={{ borderColor: colors.border }}>
-                                <b style={{ fontSize: 20 }}>ĐƠN XIN PHÉP NGHỈ</b>
-                            </Divider>
-                            <div style={{
-                                paddingBottom: '10px'
-                            }}>
-                                <Row>
-                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
-                                        <b>Lý do nghỉ việc: </b>
-                                    </Col>
-                                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
-                                        <TextArea
-                                            autoSize={{ minRows: 3, maxRows: 6 }}
-                                            // style={{ width: '50%' }}
-                                            value={reasonLeave}
-                                            onChange={(e) => {
-                                                handleChangeReasonLeave(e)
-                                            }}
-                                        />
-                                    </Col>
-                                </Row>
-                            </div>
-                            <div style={{ paddingBottom: '10px' }}>
-                                <Row>
-                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
-                                        <div style={{ paddingTop: '24px' }}>
-                                            <b>Chi tiết: </b>
-                                        </div>
-                                    </Col>
-                                    <Col xs={24} sm={24} md={24} lg={24} xl={18}>
-                                        <Table columns={columns}
-                                            dataSource={data}
-                                            pagination={false}
-                                            style={{ width: '100%' }} />
-                                        <Button style={{
-                                            borderRadius: '20px',
-                                            marginTop: '5px',
-                                        }} type="dashed" icon={<PlusCircleFilled />} onClick={handelAddRow}>Thêm dòng</Button>
-                                    </Col>
-                                </Row>
-                            </div>
-                        </>
-                        : <></>}
-                </div>
+                </>}
             </MainLayout>
         </>
     )

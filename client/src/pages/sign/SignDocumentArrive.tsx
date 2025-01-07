@@ -90,67 +90,67 @@ const SignDocumentArrive = () => {
         fetchDocumentArrive()
     }, [])
     // if (loading) return (<PageLoading />)
-    return loading ? <PageLoading /> : (
+    return (
         <>
             <MainLayout title="Văn bản đến">
-
-                <Row>
-                    <Col xs={24} sm={24} md={24} lg={12} xl={12}>
-                        <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-                            <Select
-                                defaultValue={status}
-                                style={{ width: '100%' }}
-                                onChange={(value: string) => { handleChooseStatus(value) }}
-                                options={[
-                                    { value: 'all', label: 'Tất cả' },
-                                    { value: 'process', label: 'Đang chờ xét duyệt' },
-                                    { value: 'done', label: 'Đã được xét duyệt' },
-                                    { value: 'await', label: 'Đề xuất liên quan', },
-                                ]}
-                            />
-                        </div>
-                    </Col>
-                </Row>
-                <List
-                    itemLayout="horizontal"
-                    dataSource={signDocument || []}
-                    grid={{ gutter: 16, xs: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
-                    renderItem={(item) => (
-                        <div style={{ padding: '20px' }}>
-                            <Card title={
-                                <div style={{
-                                    // display: 'flex', 
-                                    justifyContent: 'space-between', alignItems: 'center',
-                                }} >
-                                    <Row>
-                                        <Col xs={24} sm={24} md={18} lg={18} xl={18}>
-                                            <div style={{
-                                                width: '100%',
-                                                overflow: 'hidden'
-                                            }}> <b>{item.name}</b></div>
-                                        </Col>
-                                        <Col xs={24} sm={24} md={6} lg={6} xl={6}>
-                                            <div style={{ width: '100%', justifyContent: 'end', display: 'flex' }}>
-                                                <Badge status={item.status === 'draft' ? 'default'
-                                                    : item.status === 'process' ? 'processing'
-                                                        : item.status === 'completed' ? 'success'
-                                                            : 'error'}
-                                                    text={capitalizeFirstLetter(item.status)} size="default" />
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                </div>
-                            } bordered={false} style={{
-                                borderRadius: '40px',
-                            }} onClick={() => { chooseDocument(item.id) }}>
-                                <div><b>Người đề xuất:</b> {item.employee_request[1]}</div>
-                                <div><b>Công ty:</b> {item.company_id[1]}</div>
-                                {/* <div><b>Status:</b> {item.status}</div> */}
-                                <div><b>Ngày gửi:</b> {item.sent_date}</div>
-                            </Card>
-                        </div>
-                    )} />
-
+                {loading ? <PageLoading /> : <>
+                    <Row>
+                        <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                            <div style={{ paddingLeft: '20px', paddingRight: '20px' }}>
+                                <Select
+                                    defaultValue={status}
+                                    style={{ width: '100%' }}
+                                    onChange={(value: string) => { handleChooseStatus(value) }}
+                                    options={[
+                                        { value: 'all', label: 'Tất cả' },
+                                        { value: 'process', label: 'Đang chờ xét duyệt' },
+                                        { value: 'done', label: 'Đã được xét duyệt' },
+                                        { value: 'await', label: 'Đề xuất liên quan', },
+                                    ]}
+                                />
+                            </div>
+                        </Col>
+                    </Row>
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={signDocument || []}
+                        grid={{ gutter: 16, xs: 1, sm: 1, md: 1, lg: 2, xl: 2 }}
+                        renderItem={(item) => (
+                            <div style={{ padding: '20px' }}>
+                                <Card title={
+                                    <div style={{
+                                        // display: 'flex', 
+                                        justifyContent: 'space-between', alignItems: 'center',
+                                    }} >
+                                        <Row>
+                                            <Col xs={24} sm={24} md={18} lg={18} xl={18}>
+                                                <div style={{
+                                                    width: '100%',
+                                                    overflow: 'hidden'
+                                                }}> <b>{item.name}</b></div>
+                                            </Col>
+                                            <Col xs={24} sm={24} md={6} lg={6} xl={6}>
+                                                <div style={{ width: '100%', justifyContent: 'end', display: 'flex' }}>
+                                                    <Badge status={item.status === 'draft' ? 'default'
+                                                        : item.status === 'process' ? 'processing'
+                                                            : item.status === 'completed' ? 'success'
+                                                                : 'error'}
+                                                        text={capitalizeFirstLetter(item.status)} size="default" />
+                                                </div>
+                                            </Col>
+                                        </Row>
+                                    </div>
+                                } bordered={false} style={{
+                                    borderRadius: '40px',
+                                }} onClick={() => { chooseDocument(item.id) }}>
+                                    <div><b>Người đề xuất:</b> {item.employee_request[1]}</div>
+                                    <div><b>Công ty:</b> {item.company_id[1]}</div>
+                                    {/* <div><b>Status:</b> {item.status}</div> */}
+                                    <div><b>Ngày gửi:</b> {item.sent_date}</div>
+                                </Card>
+                            </div>
+                        )} />
+                </>}
             </MainLayout>
         </>
     )
