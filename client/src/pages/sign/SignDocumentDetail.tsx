@@ -15,7 +15,7 @@ import { colors } from "constants/color";
 import { confirm_action, get_document_stage_action } from "stores/actions/document_stage_action";
 import { get_current_stage_action } from "stores/actions/current_satge_action";
 import PageLoading from "widgets/PageLoading";
-import { get_document_away, get_document_by_id } from "stores/actions/sign_document";
+import { get_document_away } from "stores/actions/sign_document";
 import dayjs from 'dayjs';
 import { differenceInDays } from "date-fns";
 import { create_temporary_leave_line, delete_temporary_leave_line, get_temporary_leave_line, update_temporary_leave_line } from "stores/actions/temporary_leave_line";
@@ -217,6 +217,7 @@ const SignDocumentDetail = () => {
 
                 let flag_payment = true
                 let flag_advance = true
+                // eslint-disable-next-line array-callback-return
                 payment_row?.map((item) => {
                     if (item.payment_contact === undefined || item.payment_contact === '') {
                         flag_payment = false;
@@ -231,6 +232,7 @@ const SignDocumentDetail = () => {
                         flag_payment = false;
                     }
                 })
+                // eslint-disable-next-line array-callback-return
                 advance_row?.map((item) => {
                     if (item.name === undefined || item.name === '') {
                         flag_advance = false;
@@ -562,9 +564,11 @@ const SignDocumentDetail = () => {
     const calRemainingAmount = () => {
         let advance = 0
         let paid = 0
+        // eslint-disable-next-line array-callback-return
         payment_row?.map((item) => {
             paid += (item.payment_amount ? item.payment_amount : 0)
         })
+        // eslint-disable-next-line array-callback-return
         advance_row?.map((item) => {
             advance += (item.advance_amount ? item.advance_amount : 0)
         })
