@@ -326,6 +326,7 @@ export async function getSignDocumentById(odoo, user, id) {
       "id", "name", "name_seq", "employee_creator", "employee_request", "user_creator", "company_id",
       "department_employee_request", "job_position_employee_request", "document_detail", "document_stages",
       "stage_actions", "current_stage",
+      "partner_id",
       // "current_stage_actions",
       // "sea_sign_attachments",
       //  "stage_comment", 
@@ -358,9 +359,10 @@ export async function getSignDocumentAway(odoo, user) {
       "id", "name", "name_seq", "employee_creator", "employee_request", "user_creator", "company_id",
       "department_employee_request", "job_position_employee_request", "document_detail", "document_stages",
       "stage_actions", "current_stage",
+      "partner_id",
       // "current_stage_actions",
       // "sea_sign_attachments", "stage_comment", "reason_leaving_compute", "temporary_leave_line",
-      "sent_date", "status"
+      "sent_date", "status",
     ]);
     inParams.push(0);
     const params = [];
@@ -391,6 +393,7 @@ export async function getSignDocumentArrive(odoo, user) {
       "id", "name", "name_seq", "employee_creator", "employee_request", "user_creator", "company_id",
       "department_employee_request", "job_position_employee_request", "document_detail", "document_stages",
       "stage_actions", "current_stage",
+      "partner_id",
       // "current_stage_actions",
       // "sea_sign_attachments", "stage_comment", "reason_leaving_compute", "temporary_leave_line",
       "sent_date", "status"
@@ -421,6 +424,7 @@ export async function getSignDocumentArriveDone(odoo, user) {
       "id", "name", "name_seq", "employee_creator", "employee_request", "user_creator", "company_id",
       "department_employee_request", "job_position_employee_request", "document_detail", "document_stages",
       "stage_actions", "current_stage",
+      "partner_id",
       // "current_stage_actions",
       // "sea_sign_attachments", "stage_comment", "reason_leaving_compute", "temporary_leave_line",
       "sent_date", "status"
@@ -451,6 +455,7 @@ export async function getSignDocumentArriveProcess(odoo, user) {
       "id", "name", "name_seq", "employee_creator", "employee_request", "user_creator", "company_id",
       "department_employee_request", "job_position_employee_request", "document_detail", "document_stages",
       "stage_actions", "current_stage",
+      "partner_id",
       // "current_stage_actions",
       // "sea_sign_attachments", "stage_comment", "reason_leaving_compute", "temporary_leave_line",
       "sent_date", "status"
@@ -485,6 +490,7 @@ export async function getSignDocumentArriveAwait(odoo, user) {
       "id", "name", "name_seq", "employee_creator", "employee_request", "user_creator", "company_id",
       "department_employee_request", "job_position_employee_request", "document_detail", "document_stages",
       "stage_actions", "current_stage",
+      "partner_id",
       // "current_stage_actions",
       // "sea_sign_attachments", "stage_comment", "reason_leaving_compute", "temporary_leave_line",
       "sent_date", "status"
@@ -779,6 +785,7 @@ export async function getAdvancePaymentRequest(odoo, id) {
       'payment_date',
       'amount',
       'partner_id',
+      'advance_file_id',
       'advance_payment_description',
       'advance_payment_method',
       'sea_sign_document_id',
@@ -799,7 +806,8 @@ export async function getAdvancePaymentRequest(odoo, id) {
 
 export async function createSignDocument(odoo, user, name, employee_request, document_detail,
   reason_leaving,
-  partner_id, payment_amount, advance_payment_description, advance_payment_method,) {
+  partner_id, ap_amount, advance_payment_description, payment_method, advance_file_id,
+  payment_content, expire_date, bank_id, remaining_amount) {
   return new Promise((resolve, reject) => {
     var inParams = [];
     if (document_detail == 7) {
@@ -823,10 +831,46 @@ export async function createSignDocument(odoo, user, name, employee_request, doc
         "document_detail": document_detail,
         "status": 'draft',
         "partner_id": partner_id,
-        "payment_amount": payment_amount,
+        "ap_amount": ap_amount,
         "advance_payment_description": advance_payment_description,
-        "advance_payment_method": advance_payment_method,
+        "advance_payment_method": payment_method,
+        "advance_file_id": advance_file_id,
       })
+    } else if (document_detail == 10) {
+      if (payment_method == 'cash') {
+        inParams.push({
+          "id": 0,
+          "name": name,
+          "employee_request": employee_request,
+          "user_creator": user[0].id,
+          "company_id": user[0].company_id[0],
+          "document_detail": document_detail,
+          "status": 'draft',
+          "partner_id": partner_id,
+          "pr_pay_content": payment_content,
+          "pr_expire_date": expire_date,
+          "pr_payment_method": payment_method,
+          "pr_remaining_amount": remaining_amount,
+          "pr_bank_ids": bank_id,
+          "pr_advance_file_id": advance_file_id
+        })
+      } else {
+        inParams.push({
+          "id": 0,
+          "name": name,
+          "employee_request": employee_request,
+          "user_creator": user[0].id,
+          "company_id": user[0].company_id[0],
+          "document_detail": document_detail,
+          "status": 'draft',
+          "partner_id": partner_id,
+          "pr_pay_content": payment_content,
+          "pr_expire_date": expire_date,
+          "pr_payment_method": payment_method,
+          "pr_remaining_amount": remaining_amount,
+          "pr_advance_file_id": advance_file_id
+        })
+      }
     } else {
       inParams.push({
         "id": 0,
@@ -947,7 +991,7 @@ export async function getResPartner(odoo, user) {
   return new Promise((resolve, reject) => {
     const inParams = []
     inParams.push([
-      ["company_id", "=", user[0].company_id[0]],
+      // ["company_id", "=", user[0].company_id[0]],
     ]);
     inParams.push([
       'id',
@@ -969,7 +1013,7 @@ export async function getResPartner(odoo, user) {
   })
 }
 
-export async function updateAdvancePaymentRequest(odoo, id, amount, advance_payment_description, advance_payment_method, partner_id) {
+export async function updateAdvancePaymentRequest(odoo, id, amount, advance_payment_description, advance_payment_method, partner_id, advance_file_id) {
   return new Promise((resolve, reject) => {
     var inParams = [];
     inParams.push([id]);
@@ -978,6 +1022,7 @@ export async function updateAdvancePaymentRequest(odoo, id, amount, advance_paym
       "advance_payment_description": advance_payment_description,
       "advance_payment_method": advance_payment_method,
       "amount": amount,
+      "advance_file_id": advance_file_id,
     })
     var params = [];
     params.push(inParams);
@@ -992,3 +1037,364 @@ export async function updateAdvancePaymentRequest(odoo, id, amount, advance_paym
     });
   })
 }
+
+export async function getAccountPaymentResFile(odoo, user) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ["company_id", '=', user[0].company_id[0]]
+    ]);
+    inParams.push([
+      'id',
+      'name',
+      'code',
+      'partner_id',
+      'description',
+      'company_id',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("account.payment.res.file", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+export async function getResPartnerBank(odoo, user) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ["company_id", '=', user[0].company_id[0]]
+    ]);
+    inParams.push([
+      'id',
+      'acc_number',
+      'sanitized_acc_number',
+      'acc_holder_name',
+      'partner_id',
+      'bank_id',
+      'company_id',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("res.partner.bank", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+export async function createSignPayments(odoo, payment_contract, payment_bill, amount, date, sea_sign_document_id) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    if (date == '') {
+      inParams.push({
+        "payment_contract": payment_contract,
+        "payment_bill": payment_bill,
+        "amount": amount,
+        'sea_sign_document_id': sea_sign_document_id,
+      })
+    } else {
+      inParams.push({
+        "payment_contract": payment_contract,
+        "payment_bill": payment_bill,
+        "amount": amount,
+        "date": date,
+        'sea_sign_document_id': sea_sign_document_id,
+      })
+    }
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.payments", 'create', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+export async function updateSignPayments(odoo, id, payment_contract, payment_bill, amount, date) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    inParams.push([id])
+    if (date === '') {
+      inParams.push({
+        "payment_contract": payment_contract,
+        "payment_bill": payment_bill,
+        "amount": amount,
+        "date": null
+      })
+    } else {
+      inParams.push({
+        "payment_contract": payment_contract,
+        "payment_bill": payment_bill,
+        "amount": amount,
+        "date": date,
+      })
+    }
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.payments", 'write', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+export async function deleteSignPayments(odoo, id) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    inParams.push([id]);
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.payments", 'unlink', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+export async function createAdvancePayments(odoo, name, amount, date, sea_sign_document_id) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    if (date == '') {
+      inParams.push({
+        "name": name,
+        "amount": amount,
+        'sea_sign_document_id': sea_sign_document_id,
+      })
+    } else {
+      inParams.push({
+        "name": name,
+        "amount": amount,
+        "date": date,
+        'sea_sign_document_id': sea_sign_document_id,
+      })
+    }
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.advance.payments", 'create', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+export async function updateAdvancePayments(odoo, id, name, amount, date) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    inParams.push([id])
+    if (date == '') {
+      inParams.push({
+        "name": name,
+        "amount": amount,
+        "date": null
+      })
+    } else {
+      inParams.push({
+        "name": name,
+        "amount": amount,
+        "date": date,
+      })
+    }
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.advance.payments", 'write', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+export async function deleteAdvancePayments(odoo, id) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    inParams.push([id]);
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.advance.payments", 'unlink', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+export async function getPaymentRequest(odoo, id) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    console.log(id)
+    inParams.push([
+      ["sea_sign_document_id.id", '=', id]
+    ]);
+    inParams.push([
+      'id',
+      'name',
+      'advance_file_id',
+      'remaining_amount',
+      'sea_sign_document_id',
+      'company_id',
+      'pay_content',
+      'payment_method',
+      'expire_date',
+      'payment_date',
+      'acc_holder_name',
+      'partner_account_address',
+      'account_number',
+      'bank_name',
+      'bank_address',
+      'bank_ids',
+      'partner_id'
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.payment.request", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+export async function getSignPayments(odoo, id) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ["sea_sign_document_id.id", '=', id]
+    ]);
+    inParams.push([
+      'id',
+      'name',
+      'payment_contract',
+      'payment_bill',
+      'amount',
+      'date',
+      'sea_sign_document_id',
+      'payment_request_id',
+      'expire_date',
+      'payment_date',
+      'acc_holder_name',
+      'partner_account_address',
+      'account_number',
+      'bank_name',
+      'bank_address',
+      'bank_ids',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.payments", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+export async function getSignAdvancePayments(odoo, id) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ['sea_sign_document_id.id', '=', id]
+    ]);
+    inParams.push([
+      'id',
+      'name',
+      'amount',
+      'date',
+      'payment_request_id',
+      'sea_sign_document_id',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.advance.payments", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
+      }
+    });
+  })
+}
+
+export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_amount, pay_content, payment_method, expire_date, bank_ids, partner_id) {
+  return new Promise((resolve, reject) => {
+    var inParams = [];
+    inParams.push([id]);
+    if (payment_method == 'bank') {
+      inParams.push({
+        "partner_id": partner_id,
+        "pr_pay_content": pay_content,
+        "pr_expire_date": expire_date ? expire_date : null,
+        "pr_payment_method": payment_method,
+        "pr_remaining_amount": remaining_amount,
+        "pr_bank_ids": bank_ids,
+        "pr_advance_file_id": advance_file_id
+      })
+    } else {
+      inParams.push({
+        "partner_id": partner_id,
+        "pr_pay_content": pay_content,
+        "pr_expire_date": expire_date ? expire_date : null,
+        "pr_payment_method": payment_method,
+        "pr_remaining_amount": remaining_amount,
+        "pr_advance_file_id": advance_file_id
+      })
+    }
+    var params = [];
+    params.push(inParams);
+    odoo.execute_kw("sea.sign.document", 'write', params, (err, assets) => {
+      if (err) {
+        reject(err);
+        console.log(err)
+      } else {
+        resolve(assets);
+        console.log(assets)
+      }
+    });
+  })
+}
+
+

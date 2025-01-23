@@ -29,12 +29,13 @@ export const update_advance_payment_request = (
     partner_id: number,
     amount: number,
     advance_payment_description: string,
-    advance_payment_method: string
+    advance_payment_method: string,
+    advance_file_id?: number
 ) => {
     return async (dispatch: AppDispatch) => {
         dispatch(getAdvancePaymentRequest.request());
         try {
-            const response = await updateAdvancePaymentRequestApi(id, partner_id, amount, advance_payment_description, advance_payment_method);
+            const response = await updateAdvancePaymentRequestApi(id, partner_id, amount, advance_payment_description, advance_payment_method, advance_file_id);
             if (response.status !== 200) {
                 dispatch(getAdvancePaymentRequest.failure(null));
                 return { success: false, message: response.data?.msg };

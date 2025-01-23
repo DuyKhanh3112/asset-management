@@ -1,5 +1,5 @@
 import user from "../models/user.js";
-import { getSignDocumentAway, getSignDocumentArrive, getSignDocumentById, getSignDocumentStage, getCurrentStageAction, getSignDocumentStageAction, getSignDocumentArriveDone, getSignDocumentArriveProcess, getSignDocumentArriveAwait, confirmActionDocument, getTemporaryLeaveType, getSignDetailModelLink, getTemporaryLeave, getTemporaryLeaveLine, createSignDocument, createTemporaryLeaveLine, deleteTemporaryLeaveLine, updateTemporaryLeaveLine, updateTemporaryLeave, getAdvancePaymentRequest, updateAdvancePaymentRequest } from "../utils/getOdooUserData.js";
+import { getSignDocumentAway, getSignDocumentArrive, getSignDocumentById, getSignDocumentStage, getCurrentStageAction, getSignDocumentStageAction, getSignDocumentArriveDone, getSignDocumentArriveProcess, getSignDocumentArriveAwait, confirmActionDocument, getTemporaryLeaveType, getSignDetailModelLink, getTemporaryLeave, getTemporaryLeaveLine, createSignDocument, createTemporaryLeaveLine, deleteTemporaryLeaveLine, updateTemporaryLeaveLine, updateTemporaryLeave, getAdvancePaymentRequest, updateAdvancePaymentRequest, getAccountPaymentResFile, getResPartnerBank, createAdvancePayments, createSignPayments, getPaymentRequest, getSignPayments, getSignAdvancePayments, updatePaymentRequest, deleteSignPayments, updateSignPayments, updateAdvancePayments, deleteAdvancePayments } from "../utils/getOdooUserData.js";
 
 export const signDocumentCtl = {
     getSignDocumentById: async (req, res) => {
@@ -137,10 +137,13 @@ export const signDocumentCtl = {
     createDocument: async (req, res) => {
         try {
             // console.log(req)
-            const { name, employee_request, document_detail, reason_leaving, partner_id, amount, advance_payment_description, advance_payment_method } = req.body;
+            const { name, employee_request, document_detail, reason_leaving,
+                partner_id, amount, advance_payment_description, advance_payment_method, advance_file_id,
+                payment_content, expire_date, bank_id, remaining_amount } = req.body;
             const data = await createSignDocument(req.odoo, req.user, name, employee_request, document_detail,
                 reason_leaving,
-                partner_id, amount, advance_payment_description, advance_payment_method);
+                partner_id, amount, advance_payment_description, advance_payment_method, advance_file_id,
+                payment_content, expire_date, bank_id, remaining_amount);
             res.status(200).json({ data })
         } catch (error) {
             console.log(error)
@@ -191,14 +194,130 @@ export const signDocumentCtl = {
     },
     updateAdvancePaymentRequest: async (req, res) => {
         try {
-            const { id, amount, advance_payment_description, advance_payment_method, partner_id } = req.body;
-            const data = await updateAdvancePaymentRequest(req.odoo, id, amount, advance_payment_description, advance_payment_method, partner_id);
+            const { id, amount, advance_payment_description, advance_payment_method, partner_id, advance_file_id } = req.body;
+            const data = await updateAdvancePaymentRequest(req.odoo, id, amount, advance_payment_description, advance_payment_method, partner_id, advance_file_id);
             res.status(200).json({ data })
         } catch (error) {
             console.log(error)
             res.status(500).json({ msg: error.message })
         }
-    }
+    },
+    getAccountPaymentResFile: async (req, res) => {
+        try {
+            const data = await getAccountPaymentResFile(req.odoo, req.user);
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+    getResPartnerBank: async (req, res) => {
+        try {
+            const data = await getResPartnerBank(req.odoo, req.user);
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+
+    createPayments: async (req, res) => {
+        try {
+            const { payment_contract, payment_bill, amount, date, sea_sign_document_id } = req.body;
+            // const data = await createPayments(req.odoo, payment_contract, payment_bill, amount, date, sea_sign_document_id)
+            const data = await createSignPayments(req.odoo, payment_contract, payment_bill, amount, date, sea_sign_document_id)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+    deletePayments: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const data = await deleteSignPayments(req.odoo, id);
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+    updatePayments: async (req, res) => {
+        try {
+            const { id, payment_contract, payment_bill, amount, date } = req.body;
+            const data = await updateSignPayments(req.odoo, id, payment_contract, payment_bill, amount, date)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+
+    createAdvancePayments: async (req, res) => {
+        try {
+            const { name, amount, date, sea_sign_document_id } = req.body;
+            const data = await createAdvancePayments(req.odoo, name, amount, date, sea_sign_document_id)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+    updateAdvancePayments: async (req, res) => {
+        try {
+            const { id, name, amount, date } = req.body;
+            const data = await updateAdvancePayments(req.odoo, id, name, amount, date)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+    deleteAdvancePayments: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const data = await deleteAdvancePayments(req.odoo, id)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+
+
+    getPaymentRequest: async (req, res) => {
+        try {
+            const { id } = req.params
+            console.log(req.body)
+            const data = await getPaymentRequest(req.odoo, id)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+    getSignPayments: async (req, res) => {
+        try {
+            const { id } = req.params
+            const data = await getSignPayments(req.odoo, id)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+
+    getSignAdvancePayments: async (req, res) => {
+        try {
+            const { id } = req.params
+            const data = await getSignAdvancePayments(req.odoo, id)
+            res.status(200).json({ data })
+        } catch (error) {
+            res.status(500).json({ msg: error.message })
+        }
+    },
+
+
+    updatePaymentRequest: async (req, res) => {
+        try {
+            const { id, advance_file_id, remaining_amount, pay_content, payment_method, expire_date, bank_ids, partner_id } = req.body;
+            const data = await updatePaymentRequest(req.odoo, id, advance_file_id, remaining_amount, pay_content, payment_method, expire_date, bank_ids, partner_id);
+            res.status(200).json({ data })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ msg: error.message })
+        }
+    },
 }
 
 export default signDocumentCtl

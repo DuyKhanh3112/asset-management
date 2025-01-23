@@ -28,6 +28,8 @@ import document from 'images/documentation.png';
 import document_away from 'images/document_away.png';
 import document_arrive from 'images/document_arrive.png'
 import { get_res_partner } from "stores/actions/res_partner";
+import { get_account_payment_res_file } from "stores/actions/account_payment_res_file";
+import { get_partner_bank } from "stores/actions/partner_bank";
 
 
 type MainLayoutProps = {
@@ -71,9 +73,11 @@ const MainLayout: FC<MainLayoutProps> = ({
         await executeAction(() => get_res_partner(), true)
     }
 
-
     const fetchUser = async () => {
         await executeAction(() => get_users(), true)
+    }
+    const fetchAccountPaymentResFile = async () => {
+        await executeAction(() => get_account_payment_res_file(), true)
     }
     const fetchCompanies = async () => {
         await executeAction(() => get_company(), true)
@@ -99,10 +103,17 @@ const MainLayout: FC<MainLayoutProps> = ({
     const fetchDocumentDetail = async () => {
         await executeAction(() => get_sign_detail(), true)
     }
+
+    const fetchPartnerBank = async () => {
+        await executeAction(() => get_partner_bank(), true)
+    }
     const fetchDataDocument = async () => {
         fetchResPartner()
+        fetchAccountPaymentResFile()
+        fetchPartnerBank()
         await fetchTemporaryLeaveType()
         await fetchDocumentDetail()
+
     }
     const gotoDocumentAway = async () => {
         setIsChange(true)
@@ -140,6 +151,7 @@ const MainLayout: FC<MainLayoutProps> = ({
         fetchUser()
         fetchEmployeeMultiCompany()
         fetchResPartner()
+        fetchAccountPaymentResFile()
         setIsChange(false)
         setOpenDrawer(false)
         if (location.pathname === '/document_away') {

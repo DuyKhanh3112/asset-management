@@ -15,6 +15,11 @@ import temporaryLeaveReducer from "./temporary_leave";
 import temporaryLeaveLineReducer from "./temporary_leave_line";
 import resPartnerReducer from "./res_partner";
 import advancePaymentRequestReducer from "./advance_payment_request";
+import accountPaymentResFileReducer from "./account_payment_res_file";
+import resPartnerBankReducer from "./partner_banks";
+import signPaymentsReducer from "./sign_payments";
+import signAdvancePaymentsReducer from "./sign_advance_payments";
+import paymentRquestReducer from "./payment_request";
 
 // Định nghĩa rootReducer bằng cách kết hợp tất cả các reducer, ví dụ như authReducer, thành một reducer gốc duy nhất
 export const rootReducer = combineReducers({
@@ -33,7 +38,12 @@ export const rootReducer = combineReducers({
   temporary_leave: temporaryLeaveReducer,
   temporary_leave_line: temporaryLeaveLineReducer,
   res_partner: resPartnerReducer,
-  advance_payment_request: advancePaymentRequestReducer
+  advance_payment_request: advancePaymentRequestReducer,
+  account_payment_res_file: accountPaymentResFileReducer,
+  partner_bank: resPartnerBankReducer,
+  sign_payments: signPaymentsReducer,
+  sign_advance_payments: signAdvancePaymentsReducer,
+  payment_request: paymentRquestReducer,
 });
 
 // Định nghĩa kiểu RootState bằng cách sử dụng ReturnType để suy luận kiểu từ rootReducer,

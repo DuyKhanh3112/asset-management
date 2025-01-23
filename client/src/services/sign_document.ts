@@ -71,6 +71,11 @@ export function createSignDocumentApi(
     amount?: number,
     advance_payment_description?: string,
     advance_payment_method?: string,
+    account_payment_res_file?: number,
+    payment_content?: string,
+    expire_date?: string,
+    bank_id?: number,
+    remaining_amount?: number
 ) {
     return instance.post("/api/create-document", {
         "name": name_doc,
@@ -81,6 +86,11 @@ export function createSignDocumentApi(
         "amount": amount ? amount : 0,
         "advance_payment_description": advance_payment_description ? advance_payment_description : '',
         "advance_payment_method": advance_payment_method ? advance_payment_method : '',
+        "account_payment_res_file": account_payment_res_file,
+        "payment_content": payment_content,
+        "expire_date": expire_date,
+        "bank_id": bank_id,
+        "remaining_amount": remaining_amount
     })
 }
 
@@ -142,12 +152,14 @@ export function updateAdvancePaymentRequestApi(
     amount: number,
     advance_payment_description: string,
     advance_payment_method: string,
+    advance_file_id?: number
 ) {
     return instance.post("/api/update-advance-payment-request", {
         "id": id,
         "amount": amount,
         "advance_payment_description": advance_payment_description,
         "advance_payment_method": advance_payment_method,
-        "partner_id": partner_id
+        "partner_id": partner_id,
+        "advance_file_id": advance_file_id
     })
 }

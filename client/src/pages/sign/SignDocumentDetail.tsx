@@ -2,7 +2,7 @@
 
 import { RootState } from "stores/reducers";
 import { useSelector } from "react-redux";
-import { Button, Col, Divider, Empty, GetProp, Row, Select, Steps, Table, TableProps, Tabs, Tag, DatePicker, message, InputNumber, Form, } from "antd";
+import { Button, Col, Divider, Empty, GetProp, Row, Select, Steps, Table, TableProps, Tabs, Tag, DatePicker, message, InputNumber, Form, Input, } from "antd";
 import { CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, LeftOutlined, PlusCircleFilled } from "@ant-design/icons";
 import MainLayout from "components/app/MainLayout";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,19 +10,23 @@ import TabPane from "antd/es/tabs/TabPane";
 import useAsyncAction from "hooks/useAsyncAction";
 import React, { useEffect, useState } from "react";
 import { get_document_stage } from "stores/actions/document_stage";
-import { IAdvancePaymentRequest, IDocumentStage, IDocumentStageAction, IEmployeeTemporary, IResPartner, ISignDocument, ITemporaryLeave, ITemporaryLeaveLine, ITemporaryLeaveType } from "interfaces";
+import { IAdvancePaymentRequest, IDocumentStage, IDocumentStageAction, IEmployeeTemporary, IPaymentRequest, IResPartner, IResPartnerBank, ISignAdvancePayment, ISignDocument, ISignPayment, ITemporaryLeave, ITemporaryLeaveLine, ITemporaryLeaveType } from "interfaces";
 import { colors } from "constants/color";
 import { confirm_action, get_document_stage_action } from "stores/actions/document_stage_action";
 import { get_current_stage_action } from "stores/actions/current_satge_action";
 import PageLoading from "widgets/PageLoading";
-import { get_document_by_id } from "stores/actions/sign_document";
+import { get_document_away } from "stores/actions/sign_document";
 import dayjs from 'dayjs';
 import { differenceInDays } from "date-fns";
 import { create_temporary_leave_line, delete_temporary_leave_line, get_temporary_leave_line, update_temporary_leave_line } from "stores/actions/temporary_leave_line";
 import { get_temporary_leave, update_temporary_leave } from "stores/actions/temporary_leave";
 import TextArea from "antd/es/input/TextArea";
 import { get_advance_payment_request, update_advance_payment_request } from "stores/actions/advance_payment_request";
-import { set } from "lodash";
+import { IAccountPaymentResFile } from "interfaces/account_payment_res_file";
+import { get_payment_request, update_payment_request } from "stores/actions/payment_request";
+import { create_payments, delete_payments, get_payments, update_payments } from "stores/actions/sign_payments";
+import { create_advance_payments, delete_advance_payments, get_advance_payments, update_advance_payments } from "stores/actions/sign_advance_payments";
+import moment from "moment";
 
 const { RangePicker } = DatePicker;
 interface DataType {
@@ -39,6 +43,22 @@ interface DataTemporaryLeaveLine {
     date_type?: string,
     num_date?: number,
 }
+
+
+interface DataPayment {
+    key: number,
+    payment_contact?: string,
+    payment_bill?: string,
+    payment_date?: Date,
+    payment_amount?: number,
+}
+
+interface DataAdvancePayment {
+    key: number,
+    name?: string,
+    advanve_date?: Date,
+    advance_amount?: number,
+}
 const SignDocumentDetail = () => {
     const { id } = useParams();
     const listSignDocument = useSelector((state: RootState) => state.sign_document?.data) as ISignDocument[] | null
@@ -50,9 +70,16 @@ const SignDocumentDetail = () => {
     const temporary_leave = useSelector((state: RootState) => state.temporary_leave?.data) as ITemporaryLeave[] | null;
     const temporary_leave_line = useSelector((state: RootState) => state.temporary_leave_line?.data) as ITemporaryLeaveLine[] | null;
     const temporary_leave_type = useSelector((state: RootState) => state.temporary_leave_type?.data) as ITemporaryLeaveType[] | null;
-    const signDocument = listSignDocument?.find((item) => item.id.toString() === id) as ISignDocument || null;
+    const signDocument = listSignDocument?.find((item) => item.id.toString() === id) as ISignDocument;
     const advance_payment_request = useSelector((state: RootState) => state.advance_payment_request?.data) as IAdvancePaymentRequest[] | null;
     const res_partner = useSelector((state: RootState) => state.res_partner?.data) as IResPartner[] | null;
+    const account_payment_res_file = useSelector((state: RootState) => state.account_payment_res_file?.data) as IAccountPaymentResFile[] | null;
+
+    const payment_request = useSelector((state: RootState) => state.payment_request?.data) as IPaymentRequest[] | null
+    const sign_payment = useSelector((state: RootState) => state.sign_payments?.data) as ISignPayment[] | null
+    const sign_advance_payment = useSelector((state: RootState) => state.sign_advance_payments?.data) as ISignAdvancePayment[] | null
+    const partner_bank = useSelector((state: RootState) => state.partner_bank?.data) as IResPartnerBank[] | null;
+
     const [current_satge_action, setCurrentStageAction] = useState<IDocumentStageAction[]>([]);
     const [dataDetail, setDataDetail] = useState<DataTemporaryLeaveLine[]>()
     const [editting, setEditting] = useState(false)
@@ -65,6 +92,18 @@ const SignDocumentDetail = () => {
     const [amount, setAmount] = useState<number>(0);
     const [advance_payment_description, setAdvancePaymentDescription] = useState<string>('');
     const [payment_method, setPaymentMethod] = useState<string>('')
+    const [advance_file_id, setAdvanceFileId] = useState<IAccountPaymentResFile>();
+
+    const [listAccount, setListAccount] = useState<IAccountPaymentResFile[] | null>(null)
+    const [payment_content, setPaymentContent] = useState('')
+    const [bank_id, setBankId] = useState<IResPartnerBank>()
+    const [expire_date, setExpireDate] = useState<Date | undefined>(moment().toDate())
+    const [remaining_amount, setRemainingAmount] = useState(0)
+
+    const [payment_row, setPaymentRow] = useState<DataPayment[]>()
+
+    const [advance_row, setAdvanceRow] = useState<DataAdvancePayment[]>()
+
 
     const fetchDocumentStage = async () => {
         await executeAction(() => get_document_stage(signDocument.id), true)
@@ -86,7 +125,8 @@ const SignDocumentDetail = () => {
         }
     }
     const fetchDocumentById = async () => {
-        await executeAction(() => get_document_by_id(signDocument.id), true)
+        // await executeAction(() => get_document_by_id(signDocument.id), true)
+        await executeAction(() => get_document_away(), true)
     }
     const showErrorMessage = (content: string) => {
         messageApi.open({
@@ -129,11 +169,27 @@ const SignDocumentDetail = () => {
                 return false
             }
         }
+        if (signDocument.document_detail[0] === 10) {
+            if (partner_id === undefined) {
+                showErrorMessage('Vui lòng chọn đối tác')
+                return false
+            }
+            if (payment_method !== 'bank' && payment_method !== 'cash') {
+                showErrorMessage('Vui lòng chọn hình thức thanh toán')
+                return false
+            }
+            if (payment_method === 'bank') {
+                if (bank_id === undefined) {
+                    showErrorMessage('Vui lòng chọn tài khoản ngân hàng')
+                    return false
+                }
+            }
+        }
         return true
     }
 
     const handleConfirmAction = async (id: number) => {
-        // console.log(dataDetail.length)
+        //// console.log(dataDetail.length)
         if (checkValid()) {
             if (signDocument.document_detail[0] === 7) {
                 if (dataDetail?.length === 0) {
@@ -145,12 +201,64 @@ const SignDocumentDetail = () => {
                     fetchDocumentStage()
                     fetchCurrentStageAction()
                 }
-            } else {
-                await executeAction(() => confirm_action(id), true)
-                fetchDocumentById()
-                fetchDocumentStage()
-                fetchCurrentStageAction()
+            } else if (signDocument.document_detail[0] === 10) {
+                if (payment_content === '') {
+                    showErrorMessage('Vui lòng nhập nội dung thanh toán')
+                    return false
+                }
+                // if (expire_date === undefined) {
+                //     showErrorMessage('Vui lòng nhập thời hạn thanh toán')
+                //     return false
+                // }
+                if (remaining_amount <= 0) {
+                    showErrorMessage('Số tiền đề nghị thanh toán phải lớn hơn 0')
+                    return false
+                }
+
+                let flag_payment = true
+                let flag_advance = true
+                // eslint-disable-next-line array-callback-return
+                payment_row?.map((item) => {
+                    if (item.payment_contact === undefined || item.payment_contact === '') {
+                        flag_payment = false;
+                    }
+                    if (item.payment_bill === undefined || item.payment_bill === '') {
+                        flag_payment = false;
+                    }
+                    if (item.payment_date === undefined) {
+                        flag_payment = false;
+                    }
+                    if (item.payment_amount === undefined || item.payment_amount <= 0) {
+                        flag_payment = false;
+                    }
+                })
+                // eslint-disable-next-line array-callback-return
+                advance_row?.map((item) => {
+                    if (item.name === undefined || item.name === '') {
+                        flag_advance = false;
+                    }
+                    if (item.advanve_date === undefined) {
+                        flag_advance = false;
+                    }
+                    if (item.advance_amount === undefined || item.advance_amount <= 0) {
+                        flag_advance = false;
+                    }
+                })
+
+                if (!flag_payment) {
+                    showErrorMessage('Hãy nhập đầy đủ thông tin số tiền cần thanh toán')
+                    return false
+                }
+                if (!flag_advance) {
+                    showErrorMessage('Hãy nhập đầy đủ thông tin số tiền đã tạm ứng')
+                    return false
+                }
             }
+            await executeAction(() => confirm_action(id), true)
+            fetchDocumentById()
+            fetchDocumentStage()
+            fetchCurrentStageAction()
+
             messageApi.open({
                 type: 'success',
                 content: 'Gửi văn bản thành công',
@@ -266,6 +374,206 @@ const SignDocumentDetail = () => {
             } : {}
             : {},
     ];
+
+    const columns_payment: ColumnsType<DataPayment> = [
+        {
+            title: 'Số hợp đồng',
+            dataIndex: 'payment_contact',
+            key: 'payment_contact',
+            render(value, record, index) {
+                return <>
+                    <Input
+                        defaultValue={record.payment_contact}
+                        readOnly={!editting || signDocument.status !== 'draft'}
+                        onChange={(e) => {
+                            if (e.target.value === null) {
+                                record.payment_contact = undefined
+                            } else {
+                                record.payment_contact = e.target.value
+                            }
+                        }}
+                    />
+                </>
+            },
+        },
+        {
+            title: 'Số hóa đơn',
+            dataIndex: 'payment_bill',
+            key: 'payment_bill',
+            render(value, record, index) {
+                return <>
+                    <Input
+                        defaultValue={record.payment_bill}
+                        readOnly={!editting || signDocument.status !== 'draft'}
+                        onChange={(e) => {
+                            if (e.target.value === null) {
+                                record.payment_bill = undefined
+                            } else {
+                                record.payment_bill = e.target.value
+                            }
+                        }}
+                    />
+                </>
+            },
+        },
+        {
+            title: 'Ngày',
+            dataIndex: 'payment_date',
+            key: 'payment_date',
+            render(value, record, index) {
+                return <>
+                    <DatePicker
+                        // value={record.payment_date}
+                        defaultValue={record.payment_date ? moment(record.payment_date) : undefined}
+                        disabled={!editting || signDocument.status !== 'draft'}
+                        style={{ width: '100%' }}
+                        format="DD/MM/YYYY"
+                        onChange={(date, dateString) => {
+                            if (date === null) {
+                                record.payment_date = undefined
+                            } else {
+                                record.payment_date = date.toDate()
+                            }
+                        }}
+                    />
+                </>
+            },
+        },
+        {
+            title: 'Số tiền',
+            dataIndex: 'payment_amount',
+            key: 'payment_amount',
+            render(value, record, index) {
+                return <>
+                    <InputNumber
+                        disabled={!editting || signDocument.status !== 'draft'}
+                        style={{ width: '100%' }}
+                        defaultValue={record ? record.payment_amount ? record.payment_amount : 0 : 0}
+                        onChange={(value) => {
+                            if (value === null) {
+                                record.payment_amount = undefined
+                            } else {
+                                record.payment_amount = value
+                            }
+                            calRemainingAmount()
+                        }}
+                        formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    />
+                </>
+            },
+        },
+        !editting || signDocument.status !== 'draft' ? {} : {
+            title: '',
+            dataIndex: 'action',
+            key: 'action',
+            render(value, record, index) {
+                return <>
+                    <Button title="Delete" icon={<DeleteOutlined />} onClick={() => {
+                        if (window.confirm("Bạn có xóa dòng này?")) {
+                            const dataCoppy = payment_row?.filter((item) => item !== payment_row.at(index))
+                            setPaymentRow(dataCoppy)
+                        }
+                    }} ></Button>
+                </>
+            },
+        },
+    ];
+    const columns_advance: ColumnsType<DataAdvancePayment> = [
+        {
+            title: 'Đợt',
+            dataIndex: 'name',
+            key: 'name',
+            render(value, record, index) {
+                return <>
+                    <Input
+                        defaultValue={record.name}
+                        readOnly={!editting || signDocument.status !== 'draft'}
+                        onChange={(e) => {
+                            // console.log(e.target.value)
+                            if (e.target.value === null) {
+                                record.name = undefined
+                            } else {
+                                record.name = e.target.value
+                            }
+                        }}
+                    />
+                </>
+            },
+        },
+        {
+            title: 'Ngày',
+            dataIndex: 'advance_date',
+            key: 'advance_date',
+            render(value, record, index) {
+                return <>
+                    <DatePicker
+                        defaultValue={record.advanve_date ? moment(record.advanve_date) : undefined}
+                        disabled={!editting || signDocument.status !== 'draft'}
+                        style={{ width: '100%' }}
+                        format="DD/MM/YYYY"
+                        onChange={(date, dateString) => {
+                            if (date === null) {
+                                record.advanve_date = undefined
+                            } else {
+                                record.advanve_date = date.toDate()
+                            }
+                        }}
+                    />
+                </>
+            },
+        },
+        {
+            title: 'Số tiền',
+            dataIndex: 'advance_amount',
+            key: 'advance_amount',
+            render(value, record, index) {
+                return <>
+                    <InputNumber
+                        disabled={!editting || signDocument.status !== 'draft'}
+                        style={{ width: '100%' }}
+                        defaultValue={record ? record.advance_amount ? record.advance_amount : 0 : 0}
+                        onChange={(value) => {
+                            if (value === null) {
+                                record.advance_amount = undefined
+                            } else {
+                                record.advance_amount = value
+                            }
+                            calRemainingAmount()
+                        }}
+                        formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    />
+                </>
+            },
+        },
+        !editting || signDocument.status !== 'draft' ? {} : {
+            title: '',
+            dataIndex: 'action',
+            key: 'action',
+            render(value, record, index) {
+                return <>
+                    <Button title="Delete" icon={<DeleteOutlined />} onClick={() => {
+                        if (window.confirm("Bạn có xóa dòng này?")) {
+                            const dataCoppy = advance_row?.filter((item) => item !== advance_row.at(index))
+                            setAdvanceRow(dataCoppy)
+                        }
+                    }}></Button>
+                </>
+            },
+        },
+    ];
+    const calRemainingAmount = () => {
+        let advance = 0
+        let paid = 0
+        // eslint-disable-next-line array-callback-return
+        payment_row?.map((item) => {
+            paid += (item.payment_amount ? item.payment_amount : 0)
+        })
+        // eslint-disable-next-line array-callback-return
+        advance_row?.map((item) => {
+            advance += (item.advance_amount ? item.advance_amount : 0)
+        })
+        setRemainingAmount(advance - paid)
+    }
     const deleteRow = (index: number) => {
         if (window.confirm("Bạn có xóa dòng này?")) {
             //console.log(index)
@@ -339,7 +647,7 @@ const SignDocumentDetail = () => {
                 //console.log(dataDetail?.map((item) => item.key))
                 if (temporary_leave_line) {
                     temporary_leave_line?.map(async (line) => {
-                        const dataItem = dataDetail?.find((item) => item.key === line.id) as DataTemporaryLeaveLine || null
+                        const dataItem = dataDetail?.find((item) => item.key === line.id) as DataTemporaryLeaveLine | null
                         if (dataItem === null) {
                             //console.log('delete' + line.id)
                             await executeAction(() => delete_temporary_leave_line(line.id), true)
@@ -380,11 +688,93 @@ const SignDocumentDetail = () => {
             if (signDocument.document_detail[0] === 9) {
                 if (advance_payment_request !== null) {
                     if (advance_payment_request.length > 0) {
-                        await executeAction(() => update_advance_payment_request(advance_payment_request[0].id, partner_id ? partner_id.id : 0, amount, advance_payment_description, payment_method), true)
+                        await executeAction(() => update_advance_payment_request(advance_payment_request[0].id, partner_id ? partner_id.id : 0, amount, advance_payment_description, payment_method, advance_file_id ? advance_file_id.id : undefined), true)
                         fetchAdvancePaymentRequest(signDocument.id)
                     }
                 }
             }
+
+            if (signDocument.document_detail[0] === 10) {
+                if (payment_request !== null) {
+                    if (payment_request.length > 0) {
+                        if (expire_date === undefined) {
+                            console.log(3)
+                            await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, advance_file_id ? advance_file_id.id : undefined, payment_content, undefined, bank_id ? bank_id.id : undefined), true)
+                        } else {
+                            if ((typeof expire_date) === 'string') {
+                                console.log(2)
+                                await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? expire_date.toString() : '', bank_id ? bank_id.id : undefined), true)
+                            } else {
+                                console.log(1)
+                                await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : undefined), true)
+                            }
+                        }
+
+                        sign_payment?.map(async (item) => {
+                            const data_item = payment_row?.find((r) => r.key === item.id) as DataPayment | undefined
+                            if (data_item === undefined) {
+                                // delete
+                                console.log('delete')
+                                await executeAction(() => delete_payments(item.id), true)
+                            } else {
+                                // update
+                                if (data_item.payment_date === undefined) {
+                                    await executeAction(() => update_payments(data_item.key, data_item.payment_contact ? data_item.payment_contact : '', data_item.payment_bill ? data_item.payment_bill : '', '', data_item.payment_amount ? data_item.payment_amount : 0), true)
+                                } else {
+                                    if ((typeof data_item.payment_date) === 'string') {
+                                        await executeAction(() => update_payments(data_item.key, data_item.payment_contact ? data_item.payment_contact : '', data_item.payment_bill ? data_item.payment_bill : '', data_item.payment_date ? data_item.payment_date.toString() : '', data_item.payment_amount ? data_item.payment_amount : 0), true)
+                                    } else {
+                                        await executeAction(() => update_payments(data_item.key, data_item.payment_contact ? data_item.payment_contact : '', data_item.payment_bill ? data_item.payment_bill : '', data_item.payment_date ? convertDateToString(data_item.payment_date) : '', data_item.payment_amount ? data_item.payment_amount : 0), true)
+                                    }
+                                }
+                                // await executeAction(() => update_payments(data_item.key, data_item.payment_contact ? data_item.payment_contact : '', data_item.payment_bill ? data_item.payment_bill : '', data_item.payment_date ? convertDateToString(data_item.payment_date) : '', data_item.payment_amount ? data_item.payment_amount : 0), true)
+                            }
+                        })
+                        payment_row?.map(async (item) => {
+                            const data_item = sign_payment?.find((s) => s.id === item.key) as ISignPayment | undefined
+                            if (data_item === undefined) {
+
+                                await executeAction(() => create_payments(item.payment_contact ? item.payment_contact : '', item.payment_bill ? item.payment_bill : '', item.payment_date ? convertDateToString(item.payment_date) : '', item.payment_amount ? item.payment_amount : 0, signDocument.id), true)
+                            }
+                        })
+
+
+                        sign_advance_payment?.map(async (item) => {
+                            const data_item = advance_row?.find((r) => r.key === item.id) as DataAdvancePayment | undefined
+                            if (data_item === undefined) {
+                                // delete
+                                console.log('delete')
+                                await executeAction(() => delete_advance_payments(item.id), true)
+                            } else {
+                                // update
+                                if (data_item.advanve_date === undefined) {
+                                    await executeAction(() => update_advance_payments(data_item.key, data_item.name ? data_item.name : '', '', data_item.advance_amount ? data_item.advance_amount : 0), true)
+                                } else {
+                                    if ((typeof data_item.advanve_date) === 'string') {
+                                        await executeAction(() => update_advance_payments(data_item.key, data_item.name ? data_item.name : '', data_item.advanve_date ? data_item.advanve_date.toString() : '', data_item.advance_amount ? data_item.advance_amount : 0), true)
+                                    } else {
+                                        await executeAction(() => update_advance_payments(data_item.key, data_item.name ? data_item.name : '', data_item.advanve_date ? convertDateToString(data_item.advanve_date) : '', data_item.advance_amount ? data_item.advance_amount : 0), true)
+                                    }
+                                }
+                                // await executeAction(() => update_advance_payments(data_item.key, data_item.name ? data_item.name : '', data_item.advanve_date ? convertDateToString(data_item.advanve_date) : '', data_item.advance_amount ? data_item.advance_amount : 0), true)
+                            }
+                        })
+                        advance_row?.map(async (item) => {
+                            const data_item = sign_advance_payment?.find((s) => s.id === item.key) as ISignAdvancePayment | undefined
+                            if (data_item === undefined) {
+                                // create 
+                                console.log('create')
+                                await executeAction(() => create_advance_payments(item.name ? item.name : '', item.advanve_date ? convertDateToString(item.advanve_date) : '', item.advance_amount ? item.advance_amount : 0, signDocument.id), true)
+                            }
+                        })
+
+                        await fetchPaymentRequest()
+                        await fetchSignPayment()
+                        await fetchAdvancePayment()
+                    }
+                }
+            }
+            fetchDocumentById();
             setEditting(false)
             messageApi.open({
                 type: 'success',
@@ -403,10 +793,10 @@ const SignDocumentDetail = () => {
         await executeAction(() => get_advance_payment_request(id), true)
     }
 
-    const convertDateToString = (date: Date) => {
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
+    const convertDateToString = (d: Date) => {
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
         return `${year}-${month}-${day}`;
     }
     const btnCancel = () => {
@@ -426,6 +816,15 @@ const SignDocumentDetail = () => {
     const handleChangeReasonLeave = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setReasonLeave(e.target.value)
     }
+    const fetchPaymentRequest = async () => {
+        await executeAction(() => get_payment_request(signDocument.id), true)
+    }
+    const fetchSignPayment = async () => {
+        await executeAction(() => get_payments(signDocument.id), true)
+    }
+    const fetchAdvancePayment = async () => {
+        await executeAction(() => get_advance_payments(signDocument.id), true)
+    }
 
     useEffect(() => {
         if (signDocument !== null) {
@@ -439,8 +838,70 @@ const SignDocumentDetail = () => {
             if (signDocument.document_detail[0] === 9) {
                 fetchAdvancePaymentRequest(signDocument.id)
             }
+            if (signDocument.document_detail[0] === 10) {
+                fetchPaymentRequest()
+                fetchSignPayment()
+                fetchAdvancePayment()
+            }
         }
     }, [id])
+
+    useEffect(() => {
+        if (signDocument.document_detail[0] === 10) {
+            if (payment_request !== null) {
+                if (payment_request.length > 0) {
+                    console.log(payment_request[0])
+                    if (payment_request[0].pay_content) {
+                        setPaymentContent(payment_request[0].pay_content)
+                    } else {
+                        setPaymentContent('')
+                    }
+                    if (payment_request[0].bank_ids) {
+                        const bank = partner_bank?.find((item) => item.id === (payment_request[0].bank_ids?.at(0))) as IResPartnerBank | undefined
+                        setBankId(bank)
+                    } else {
+                        setBankId(undefined)
+                    }
+                    if (signDocument.partner_id) {
+                        const partner = res_partner?.find((item) => item.id === signDocument.partner_id?.at(0)) as IResPartner | undefined
+                        setPartnerId(partner)
+                    } else {
+                        setPartnerId(undefined)
+                    }
+
+                    setExpireDate(payment_request[0].expire_date)
+                    setRemainingAmount(payment_request[0].remaining_amount)
+                    setPaymentMethod(payment_request[0].payment_method)
+                }
+            }
+        }
+    }, [payment_request, loading])
+
+    useEffect(() => {
+        const list = sign_payment?.map((item) => {
+            return {
+                key: item.id,
+                payment_contact: item.payment_contract,
+                payment_bill: item.payment_bill,
+                payment_date: item.date,
+                payment_amount: item.amount ? item.amount : 0,
+            }
+        })
+        setPaymentRow(list)
+    }, [sign_payment, loading])
+
+    useEffect(() => {
+        const list = sign_advance_payment?.map((item) => {
+            return {
+                key: item.id,
+                name: item.name,
+                advanve_date: item.date,
+                advance_amount: item.amount,
+            }
+        })
+        setAdvanceRow(list)
+        // console.log(list)
+    }, [sign_advance_payment, loading])
 
     useEffect(() => {
         const lines =
@@ -468,26 +929,30 @@ const SignDocumentDetail = () => {
     }, [temporary_leave])
 
     useEffect(() => {
-        if (advance_payment_request !== null) {
-            if (advance_payment_request.length > 0) {
-                const partner = res_partner?.find((item) => item.id === advance_payment_request[0].partner_id[0])
-                console.log(advance_payment_request[0])
-                console.log(partner)
-                setPartnerId(partner)
-                setAmount(advance_payment_request[0].amount)
-                setAdvancePaymentDescription(advance_payment_request[0].advance_payment_description)
-                setPaymentMethod(advance_payment_request[0].advance_payment_method)
+        if (signDocument.document_detail[0] === 9) {
+            if (advance_payment_request !== null) {
+                if (advance_payment_request.length > 0) {
+                    const partner = res_partner?.find((item) => item.id === advance_payment_request[0].partner_id[0])
+                    const file = account_payment_res_file?.find((item) => item.id === (advance_payment_request[0].advance_file_id ? advance_payment_request[0].advance_file_id[0] : 0))
+                    const list = account_payment_res_file?.filter((item) => item.partner_id[0] === advance_payment_request[0].partner_id[0]) as IAccountPaymentResFile[] || null
+                    setListAccount(list)
+                    setPartnerId(partner)
+                    setAmount(advance_payment_request[0].amount)
+                    setAdvancePaymentDescription(advance_payment_request[0].advance_payment_description)
+                    setPaymentMethod(advance_payment_request[0].advance_payment_method)
+                    setAdvanceFileId(file)
+                } else {
+                    setPartnerId(undefined)
+                    setAmount(0)
+                    setAdvancePaymentDescription('')
+                    setPaymentMethod('')
+                }
             } else {
                 setPartnerId(undefined)
                 setAmount(0)
                 setAdvancePaymentDescription('')
                 setPaymentMethod('')
             }
-        } else {
-            setPartnerId(undefined)
-            setAmount(0)
-            setAdvancePaymentDescription('')
-            setPaymentMethod('')
         }
     }, [advance_payment_request, loading, res_partner, id])
 
@@ -495,13 +960,14 @@ const SignDocumentDetail = () => {
     useEffect(() => {
         getCurrentStageAction()
     }, [current_satge_action_ids])
-
+    console.log(advance_row)
+    console.log(payment_row)
     return (
         <>
             {contextHolder}
-            <MainLayout title={signDocument === null ? '' : signDocument.name}>
+            <MainLayout title={signDocument === undefined ? '' : signDocument.name}>
                 {loading ? <PageLoading /> :
-                    signDocument == null
+                    signDocument === undefined
                         ? <Empty /> :
                         <>
                             <div style={{
@@ -645,7 +1111,7 @@ const SignDocumentDetail = () => {
                                                                 autoSize={{ minRows: 3, maxRows: 6 }}
                                                                 // style={{  }}
                                                                 value={reasonLeave}
-                                                                readOnly={!editting}
+                                                                readOnly={!editting || signDocument.status !== 'draft'}
                                                                 onChange={(e) => {
                                                                     handleChangeReasonLeave(e)
                                                                 }}
@@ -691,6 +1157,9 @@ const SignDocumentDetail = () => {
                                                                 onChange={(value: number) => {
                                                                     const partner = res_partner?.find((item) => item.id === value)
                                                                     setPartnerId(partner)
+                                                                    const list = account_payment_res_file?.filter((item) => item.partner_id[0] === value) as IAccountPaymentResFile[] || null
+                                                                    setListAccount(list)
+                                                                    setAdvanceFileId(undefined)
                                                                 }}
                                                                 disabled={!editting || signDocument.status !== 'draft'}
                                                                 options={
@@ -772,7 +1241,323 @@ const SignDocumentDetail = () => {
                                                         </Col>
                                                     </Row>
                                                 </div>
+                                                {partner_id ? <div style={{
+                                                    paddingBottom: '10px'
+                                                }}>
+                                                    <Row>
+                                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                            <b>Hồ sơ: </b>
+                                                        </Col>
+                                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                            <Select
+                                                                style={{ width: '100%' }}
+                                                                disabled={!editting || signDocument.status !== 'draft'}
+                                                                // defaultValue={advance_file_id ? advance_file_id.id : undefined}
+                                                                value={advance_file_id?.id}
+                                                                onChange={(value: number) => {
+                                                                    const file = account_payment_res_file?.find((item) => item.id === value)
+                                                                    setAdvanceFileId(file)
+                                                                }}
+                                                                options={
+                                                                    listAccount !== null ? listAccount.map((ac) => {
+                                                                        return {
+                                                                            value: ac.id,
+                                                                            label: ac.name,
+                                                                        }
+                                                                    }) : []
+                                                                }
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                </div> : <></>}
                                             </Form> : <></>}
+
+                                        {
+                                            signDocument.document_detail[0] === 10 ?
+                                                <>
+                                                    <Divider orientation="left" style={{ borderColor: colors.border }}>
+                                                        <b style={{ fontSize: 20 }}>ĐỀ NGHỊ THANH TOÁN</b>
+                                                    </Divider>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Thanh toán cho: </b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <Select
+                                                                    style={{ width: '100%' }}
+                                                                    value={partner_id ? partner_id.id : undefined}
+                                                                    disabled={!editting || signDocument.status !== 'draft'}
+                                                                    onChange={(value: number) => {
+                                                                        const partner = res_partner?.find((item) => item.id === value)
+                                                                        setPartnerId(partner)
+                                                                    }}
+                                                                    options={
+                                                                        res_partner?.map((item) => {
+                                                                            return {
+                                                                                value: item.id,
+                                                                                label: item.name,
+                                                                            }
+                                                                        })
+                                                                    }
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Nội dung thanh toán: </b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <TextArea
+                                                                    autoSize={{ minRows: 3, maxRows: 6 }}
+                                                                    // style={{ width: '50%' }}
+                                                                    readOnly={!editting || signDocument.status !== 'draft'}
+                                                                    value={payment_content}
+                                                                    onChange={(e) => {
+                                                                        setPaymentContent(e.target.value)
+                                                                    }}
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Thời hạn thanh toán: </b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <DatePicker style={{ width: '100%' }}
+                                                                    value={expire_date ? moment(expire_date) : undefined}
+                                                                    readOnly={!editting || signDocument.status !== 'draft'}
+                                                                    format={['DD/MM/YYYY']}
+                                                                    onChange={(date: moment.Moment, dateString: string | string[]) => {
+                                                                        if (date === null) {
+                                                                            setExpireDate(undefined)
+                                                                        } else {
+                                                                            setExpireDate(date.toDate())
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Hình thức thanh toán: </b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <Select
+                                                                    style={{ width: '100%' }}
+                                                                    value={payment_method}
+                                                                    disabled={!editting || signDocument.status !== 'draft'}
+                                                                    onChange={(value: string) => { setPaymentMethod(value) }}
+                                                                    options={[
+                                                                        { value: 'bank', label: 'Chuyển khoản' },
+                                                                        { value: 'cash', label: 'Tiền mặt' },
+                                                                    ]}
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    {payment_method === 'bank' ?
+                                                        <>
+                                                            <div style={{
+                                                                paddingBottom: '10px'
+                                                            }}>
+                                                                <Row>
+                                                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                        <b>Tài khoản ngân hàng: </b>
+                                                                    </Col>
+                                                                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                        <Select
+                                                                            style={{ width: '100%' }}
+                                                                            value={bank_id ? bank_id.id : undefined}
+                                                                            onChange={(value: number) => {
+                                                                                const bank = partner_bank?.find((item) => item.id === value) as IResPartnerBank || undefined
+                                                                                setBankId(bank)
+                                                                            }}
+                                                                            options={partner_bank === null ? [] : partner_bank.map((item) => {
+                                                                                return {
+                                                                                    value: item.id,
+                                                                                    label: item.acc_number,
+                                                                                }
+                                                                            })}
+                                                                        />
+                                                                    </Col>
+                                                                </Row>
+                                                            </div>
+                                                            <div style={{
+                                                                paddingBottom: '10px'
+                                                            }}>
+                                                                <Row>
+                                                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                        <b>Chủ tài khoản:</b>
+                                                                    </Col>
+                                                                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                        <Input
+                                                                            readOnly={true}
+                                                                            value={bank_id ? bank_id.acc_holder_name ? bank_id.acc_holder_name : '' : ''} />
+                                                                    </Col>
+                                                                </Row>
+                                                            </div>
+                                                            <div style={{
+                                                                paddingBottom: '10px'
+                                                            }}>
+                                                                <Row>
+                                                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                        <b>Số tài khoản:</b>
+                                                                    </Col>
+                                                                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                        <Input
+                                                                            readOnly={true}
+                                                                            value={bank_id ? bank_id.acc_number : ''} />
+                                                                    </Col>
+                                                                </Row>
+                                                            </div>
+                                                            <div style={{
+                                                                paddingBottom: '10px'
+                                                            }}>
+                                                                <Row>
+                                                                    <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                        <b>Tên ngân hàng:</b>
+                                                                    </Col>
+                                                                    <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                        <Input
+                                                                            readOnly={true}
+                                                                            value={bank_id ? bank_id.bank_id[1] : ''} />
+                                                                    </Col>
+                                                                </Row>
+                                                            </div>
+
+                                                        </> : <></>}
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Số tiền cần thanh toán:</b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <Table columns={columns_payment}
+                                                                    dataSource={payment_row}
+                                                                    pagination={false}
+                                                                    style={{ width: '100%' }} />
+                                                                {!editting || signDocument.status !== 'draft' ? <></> :
+                                                                    <Button style={{
+                                                                        borderRadius: '20px',
+                                                                        marginTop: '5px',
+                                                                    }} type="dashed" icon={<PlusCircleFilled />} onClick={() => {
+                                                                        setPaymentRow((prev) => {
+                                                                            return [...(prev ? prev : []), {
+                                                                                key: prev ? prev.length > 0 ? prev[prev.length - 1].key + 1 : 0 : 0,
+                                                                                payment_contact: undefined,
+                                                                                payment_bill: undefined,
+                                                                                payment_date: undefined,
+                                                                                payment_amount: undefined,
+                                                                            }]
+                                                                        })
+                                                                        // console.log(payment_row)
+                                                                    }}>Thêm dòng</Button>}
+
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Số tiền đã tạm ứng:</b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <Table columns={columns_advance}
+                                                                    dataSource={advance_row}
+                                                                    pagination={false}
+                                                                    style={{ width: '100%' }} />
+                                                                {
+                                                                    !editting || signDocument.status !== 'draft' ?
+                                                                        <></> :
+                                                                        <Button style={{
+                                                                            borderRadius: '20px',
+                                                                            marginTop: '5px',
+                                                                        }} type="dashed" icon={<PlusCircleFilled />} onClick={() => {
+                                                                            setAdvanceRow((prev) => {
+                                                                                return [...(prev ? prev : []), {
+                                                                                    key: prev ? prev.length > 0 ? prev[prev.length - 1].key + 1 : 0 : 0,
+                                                                                    name: undefined,
+                                                                                    advanve_date: undefined,
+                                                                                    advance_amount: undefined,
+                                                                                }]
+                                                                            })
+                                                                        }}>Thêm dòng</Button>
+                                                                }
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Số tiền đề nghị thanh toán:</b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <InputNumber
+                                                                    style={{ width: '100%' }}
+                                                                    disabled={!editting || signDocument.status !== 'draft'}
+                                                                    value={remaining_amount}
+                                                                    onChange={(value) => {
+                                                                        if (value === null) {
+                                                                            setRemainingAmount(0)
+                                                                        } else {
+                                                                            setRemainingAmount(value)
+                                                                        }
+                                                                    }}
+                                                                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                                // parser={value => value ? value.replace(/₫\s?|(,*)/g, '') : ''}
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    {partner_id ? <>
+                                                        <Row style={{ paddingTop: '10px' }}>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Hồ sơ: </b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <Select
+                                                                    disabled={!editting || signDocument.status !== 'draft'}
+                                                                    style={{ width: '100%' }}
+                                                                    onChange={(value: number) => {
+                                                                        const account = listAccount?.find((item) => item.id === value) as IAccountPaymentResFile || undefined
+                                                                        setAdvanceFileId(account)
+                                                                    }}
+                                                                    options={listAccount === null ? []
+                                                                        : listAccount.map((item) => {
+                                                                            return {
+                                                                                value: item.id,
+                                                                                label: item.name,
+                                                                            }
+                                                                        })
+                                                                    }
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </> : <></>}
+                                                </>
+                                                : <></>
+                                        }
 
                                         {current_satge_action.length !== 0 && !editting ? <div style={{
                                             paddingTop: '24px'

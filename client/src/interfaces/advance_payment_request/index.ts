@@ -6,4 +6,5 @@ export interface IAdvancePaymentRequest {
     advance_payment_description: string;
     advance_payment_method: string;
     sea_sign_document_id: (number | string)[];
+    advance_file_id?: (number | string)[];
 }

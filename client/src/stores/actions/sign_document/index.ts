@@ -138,27 +138,29 @@ export const get_document_arrive_await = () => {
         }
     }
 }
-interface DataTemporaryLeaveLine {
-    leaveType?: ITemporaryLeaveType,
-    rangeDate?: Date[],
-    dateType?: string,
-    num_date?: number
-}
+
 export const create_sign_document = (
     name: string,
     employee_request: number, document_detail: number,
     reason_leaving?: string,
     partner_id?: number,
-    payment_amount?: number,
+    ap_amount?: number,
     advance_payment_description?: string,
-    advance_payment_method?: string,
+    payment_method?: string,
+    account_payment_res_file?: number,
+    payment_content?: string,
+    expire_date?: string,
+    bank_id?: number,
+    remaining_amount?: number
+
 ) => {
     return async (dispatch: AppDispatch) => {
         dispatch(getSignDocuments.request());
         try {
             const response = await createSignDocumentApi(name, employee_request, document_detail,
                 reason_leaving,
-                partner_id, payment_amount, advance_payment_description, advance_payment_method);
+                partner_id, ap_amount, advance_payment_description, payment_method, account_payment_res_file,
+                payment_content, expire_date, bank_id, remaining_amount);
             if (response.status !== 200) {
                 dispatch(getSignDocuments.failure(null));
                 return { success: false, message: response.data?.msg };

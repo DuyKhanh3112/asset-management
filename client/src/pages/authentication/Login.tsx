@@ -39,7 +39,7 @@ const Login = () => {
     <Suspense fallback={<Loading />}>
       <center style={{
         backgroundColor: myColor.backgroundColor,
-        // height: '100vh'
+        height: '100vh'
       }}>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <Image src={logo} style={{ maxWidth: '35%' }} preview={false} alt="" />
