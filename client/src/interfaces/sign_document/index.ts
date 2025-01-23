@@ -10,6 +10,7 @@ export interface ISignDocument {
     document_stages: number[];
     stage_actions: number[];
     current_stage: (number | string)[];
+    partner_id?: (number | string)[];
     sent_date: string;
     status: string;
     department_employee_request: (number | string)[];
