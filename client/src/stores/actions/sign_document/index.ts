@@ -151,7 +151,10 @@ export const create_sign_document = (
     payment_content?: string,
     expire_date?: string,
     bank_id?: number,
-    remaining_amount?: number
+    remaining_amount?: number,
+    payment_proposal_purpose?: string,
+    pr_payments?: any[],
+    pr_advance_payments?: any[]
 
 ) => {
     return async (dispatch: AppDispatch) => {
@@ -160,7 +163,7 @@ export const create_sign_document = (
             const response = await createSignDocumentApi(name, employee_request, document_detail,
                 reason_leaving,
                 partner_id, ap_amount, advance_payment_description, payment_method, account_payment_res_file,
-                payment_content, expire_date, bank_id, remaining_amount);
+                payment_content, expire_date, bank_id, remaining_amount, payment_proposal_purpose, pr_payments, pr_advance_payments);
             if (response.status !== 200) {
                 dispatch(getSignDocuments.failure(null));
                 return { success: false, message: response.data?.msg };

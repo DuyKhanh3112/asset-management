@@ -1,6 +1,6 @@
 export async function getUserData(odoo, uid) {
   return new Promise((resolve, reject) => {
-    const params = [[['id', '=', uid]], ['id', 'name', 'company_ids', 'company_id', 'email']];
+    const params = [[['id', '=', uid]], ['id', 'name', 'company_ids', 'company_id', 'email', 'phone', 'mobile', 'login', 'image', 'job_id', 'department_id', 'employee_id', 'groups_id', 'in_group_177']];
     odoo.execute_kw('res.users', 'search_read', [params], (err, user) => {
       if (err) {
         reject(err);
@@ -807,7 +807,7 @@ export async function getAdvancePaymentRequest(odoo, id) {
 export async function createSignDocument(odoo, user, name, employee_request, document_detail,
   reason_leaving,
   partner_id, ap_amount, advance_payment_description, payment_method, advance_file_id,
-  payment_content, expire_date, bank_id, remaining_amount) {
+  payment_content, expire_date, bank_id, remaining_amount, payment_proposal_purpose, pr_payments, pr_advance_payments) {
   return new Promise((resolve, reject) => {
     var inParams = [];
     if (document_detail == 7) {
@@ -852,7 +852,10 @@ export async function createSignDocument(odoo, user, name, employee_request, doc
           "pr_payment_method": payment_method,
           "pr_remaining_amount": remaining_amount,
           "pr_bank_ids": bank_id,
-          "pr_advance_file_id": advance_file_id
+          "pr_advance_file_id": advance_file_id,
+          "payment_proposal_purpose": payment_proposal_purpose,
+          'pr_payments': pr_payments,
+          'pr_advance_payments': pr_advance_payments,
         })
       } else {
         inParams.push({
@@ -868,7 +871,10 @@ export async function createSignDocument(odoo, user, name, employee_request, doc
           "pr_expire_date": expire_date,
           "pr_payment_method": payment_method,
           "pr_remaining_amount": remaining_amount,
-          "pr_advance_file_id": advance_file_id
+          "pr_advance_file_id": advance_file_id,
+          "payment_proposal_purpose": payment_proposal_purpose,
+          'pr_payments': pr_payments,
+          'pr_advance_payments': pr_advance_payments,
         })
       }
     } else {
@@ -998,6 +1004,8 @@ export async function getResPartner(odoo, user) {
       'name',
       'email',
       'user_id',
+      'phone',
+      'display_name',
       'company_id',
     ]);
     inParams.push(0);
@@ -1093,15 +1101,17 @@ export async function getResPartnerBank(odoo, user) {
   })
 }
 
-export async function createSignPayments(odoo, payment_contract, payment_bill, amount, date, sea_sign_document_id) {
+export async function createSignPayments(odoo, payment_contract, payment_bill, amount, date, sea_sign_document_id, payment_request_id) {
   return new Promise((resolve, reject) => {
     var inParams = [];
+    console.log("payment_request_id:" + payment_request_id)
     if (date == '') {
       inParams.push({
         "payment_contract": payment_contract,
         "payment_bill": payment_bill,
         "amount": amount,
         'sea_sign_document_id': sea_sign_document_id,
+        "payment_request_id": payment_request_id,
       })
     } else {
       inParams.push({
@@ -1110,6 +1120,7 @@ export async function createSignPayments(odoo, payment_contract, payment_bill, a
         "amount": amount,
         "date": date,
         'sea_sign_document_id': sea_sign_document_id,
+        "payment_request_id": payment_request_id,
       })
     }
     var params = [];
@@ -1177,21 +1188,22 @@ export async function deleteSignPayments(odoo, id) {
   })
 }
 
-export async function createAdvancePayments(odoo, name, amount, date, sea_sign_document_id) {
+export async function createAdvancePayments(odoo, name, amount, date, sea_sign_document_id, payment_request_id) {
   return new Promise((resolve, reject) => {
+    console.log("payment_request_id:" + payment_request_id)
     var inParams = [];
     if (date == '') {
       inParams.push({
-        "name": name,
         "amount": amount,
         'sea_sign_document_id': sea_sign_document_id,
+        'payment_request_id': payment_request_id,
       })
     } else {
       inParams.push({
-        "name": name,
         "amount": amount,
         "date": date,
         'sea_sign_document_id': sea_sign_document_id,
+        'payment_request_id': payment_request_id,
       })
     }
     var params = [];
@@ -1259,7 +1271,6 @@ export async function deleteAdvancePayments(odoo, id) {
 export async function getPaymentRequest(odoo, id) {
   return new Promise((resolve, reject) => {
     const inParams = []
-    console.log(id)
     inParams.push([
       ["sea_sign_document_id.id", '=', id]
     ]);
@@ -1280,7 +1291,8 @@ export async function getPaymentRequest(odoo, id) {
       'bank_name',
       'bank_address',
       'bank_ids',
-      'partner_id'
+      'partner_id',
+      'payment_proposal_purpose',
     ]);
     inParams.push(0);
     const params = [];
@@ -1298,8 +1310,9 @@ export async function getPaymentRequest(odoo, id) {
 export async function getSignPayments(odoo, id) {
   return new Promise((resolve, reject) => {
     const inParams = []
+    console.log(id)
     inParams.push([
-      ["sea_sign_document_id.id", '=', id]
+      ["payment_request_id.sea_sign_document_id.id", '=', id]
     ]);
     inParams.push([
       'id',
@@ -1335,8 +1348,9 @@ export async function getSignPayments(odoo, id) {
 export async function getSignAdvancePayments(odoo, id) {
   return new Promise((resolve, reject) => {
     const inParams = []
+    console.log('aaa: ', id)
     inParams.push([
-      ['sea_sign_document_id.id', '=', id]
+      ['payment_request_id.sea_sign_document_id.id', '=', id]
     ]);
     inParams.push([
       'id',
@@ -1359,7 +1373,7 @@ export async function getSignAdvancePayments(odoo, id) {
   })
 }
 
-export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_amount, pay_content, payment_method, expire_date, bank_ids, partner_id) {
+export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_amount, pay_content, payment_method, expire_date, bank_ids, partner_id, payment_proposal_purpose) {
   return new Promise((resolve, reject) => {
     var inParams = [];
     inParams.push([id]);
@@ -1371,7 +1385,8 @@ export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_
         "pr_payment_method": payment_method,
         "pr_remaining_amount": remaining_amount,
         "pr_bank_ids": bank_ids,
-        "pr_advance_file_id": advance_file_id
+        "pr_advance_file_id": advance_file_id,
+        "payment_proposal_purpose": payment_proposal_purpose
       })
     } else {
       inParams.push({
@@ -1380,7 +1395,8 @@ export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_
         "pr_expire_date": expire_date ? expire_date : null,
         "pr_payment_method": payment_method,
         "pr_remaining_amount": remaining_amount,
-        "pr_advance_file_id": advance_file_id
+        "pr_advance_file_id": advance_file_id,
+        "payment_proposal_purpose": payment_proposal_purpose
       })
     }
     var params = [];
@@ -1392,6 +1408,30 @@ export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_
       } else {
         resolve(assets);
         console.log(assets)
+      }
+    });
+  })
+}
+
+export async function getPurchaseOrder(odoo, id) {
+  return new Promise((resolve, reject) => {
+    const inParams = []
+    inParams.push([
+      ['payment_vendor', '=', parseInt(id)]
+    ]);
+    inParams.push([
+      'id',
+      'name',
+      'payment_vendor',
+    ]);
+    inParams.push(0);
+    const params = [];
+    params.push(inParams);
+    odoo.execute_kw("purchase.order", 'search_read', params, (err, assets) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(assets);
       }
     });
   })

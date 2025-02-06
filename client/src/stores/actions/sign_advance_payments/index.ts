@@ -10,11 +10,12 @@ export const create_advance_payments = (
     date: string,
     amount: number,
     sea_sign_document_id: number,
+    payment_request_id: number
 ) => {
     return async (dispatch: AppDispatch) => {
         dispatch(getSignAdvancePayments.request());
         try {
-            const response = await createAdvancePaymentsApi(name, date, amount, sea_sign_document_id);
+            const response = await createAdvancePaymentsApi(name, date, amount, sea_sign_document_id, payment_request_id);
             if (response.status !== 200) {
                 dispatch(getSignAdvancePayments.failure(null));
                 return { success: false, message: response.data?.msg };

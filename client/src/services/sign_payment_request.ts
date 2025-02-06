@@ -9,6 +9,7 @@ export function updatePaymentRequestApi(
     partner_id: number,
     remaining_amount: number,
     payment_method: string,
+    payment_proposal_purpose: string,
     advance_file_id?: number,
     pay_content?: string,
     expire_date?: string,
@@ -22,6 +23,7 @@ export function updatePaymentRequestApi(
         "payment_method": payment_method,
         "expire_date": expire_date,
         "bank_ids": bank_ids,
-        "partner_id": partner_id
+        "partner_id": partner_id,
+        "payment_proposal_purpose": payment_proposal_purpose
     })
 }

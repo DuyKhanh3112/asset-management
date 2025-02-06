@@ -17,7 +17,7 @@ export const get_payment_request = (
                 return { success: false, message: response.data?.msg };
             }
             dispatch(getPaymentRequest.success(response.data?.data || []));
-            return { success: true, message: response.data?.msg };
+            return { success: true, message: response.data?.msg, data: response.data?.data };
         } catch (e) {
             dispatch(getPaymentRequest.failure(null));
             const message = getErrorMessage(e);
@@ -32,16 +32,16 @@ export const update_payment_request = (
     partner_id: number,
     remaining_amount: number,
     payment_method: string,
+    payment_proposal_purpose: string,
     advance_file_id?: number,
     pay_content?: string,
     expire_date?: string,
     bank_ids?: number,
 ) => {
-    console.log('abcc')
     return async (dispatch: AppDispatch) => {
         dispatch(getPaymentRequest.request());
         try {
-            const response = await updatePaymentRequestApi(id, partner_id, remaining_amount, payment_method, advance_file_id, pay_content, expire_date, bank_ids);
+            const response = await updatePaymentRequestApi(id, partner_id, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id, pay_content, expire_date, bank_ids);
             if (response.status !== 200) {
                 dispatch(getPaymentRequest.failure(null));
                 return { success: false, message: response.data?.msg };

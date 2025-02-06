@@ -5,12 +5,14 @@ export function createAdvancePaymentsApi(
     date: string,
     amount: number,
     sea_sign_document_id: number,
+    payment_request_id: number
 ) {
     return instance.post("/api/create-advance-payments", {
         "name": name,
         "date": date,
         "amount": amount,
-        "sea_sign_document_id": sea_sign_document_id
+        "sea_sign_document_id": sea_sign_document_id,
+        "payment_request_id": payment_request_id
     });
 }
 

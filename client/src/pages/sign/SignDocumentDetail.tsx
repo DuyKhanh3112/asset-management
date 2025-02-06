@@ -94,15 +94,18 @@ const SignDocumentDetail = () => {
     const [payment_method, setPaymentMethod] = useState<string>('')
     const [advance_file_id, setAdvanceFileId] = useState<IAccountPaymentResFile>();
 
+    // de nghi thanh toan
     const [listAccount, setListAccount] = useState<IAccountPaymentResFile[] | null>(null)
     const [payment_content, setPaymentContent] = useState('')
     const [bank_id, setBankId] = useState<IResPartnerBank>()
     const [expire_date, setExpireDate] = useState<Date | undefined>(moment().toDate())
     const [remaining_amount, setRemainingAmount] = useState(0)
+    const [payment_proposal_purpose, setPaymentProposalPurpose] = useState('')
 
     const [payment_row, setPaymentRow] = useState<DataPayment[]>()
 
     const [advance_row, setAdvanceRow] = useState<DataAdvancePayment[]>()
+
 
 
     const fetchDocumentStage = async () => {
@@ -136,25 +139,6 @@ const SignDocumentDetail = () => {
     }
 
     const checkValid = () => {
-        if (signDocument.document_detail[0] === 7) {
-            if (reasonLeave === '') {
-                showErrorMessage('Vui lòng nhập lý do nghỉ việc')
-                return false
-            }
-            let valid = true
-            dataDetail?.map((item) => {
-                if (item.date_type && item.leave_type && item.range_date) {
-                    return true
-                } else {
-                    valid = false
-                    return false
-                }
-            })
-            if (!valid) {
-                showErrorMessage('Vui lòng nhập đầy đủ thông tin chi tiết')
-                return false
-            }
-        }
         if (signDocument.document_detail[0] === 9) {
             if (partner_id === undefined) {
                 showErrorMessage('Vui lòng chọn người tạm ứng')
@@ -172,6 +156,10 @@ const SignDocumentDetail = () => {
         if (signDocument.document_detail[0] === 10) {
             if (partner_id === undefined) {
                 showErrorMessage('Vui lòng chọn đối tác')
+                return false
+            }
+            if (payment_proposal_purpose === undefined || payment_proposal_purpose === '' || !payment_proposal_purpose) {
+                showErrorMessage('Vui lòng nhập mục đích đề nghị thanh toán')
                 return false
             }
             if (payment_method !== 'bank' && payment_method !== 'cash') {
@@ -479,27 +467,27 @@ const SignDocumentDetail = () => {
         },
     ];
     const columns_advance: ColumnsType<DataAdvancePayment> = [
-        {
-            title: 'Đợt',
-            dataIndex: 'name',
-            key: 'name',
-            render(value, record, index) {
-                return <>
-                    <Input
-                        defaultValue={record.name}
-                        readOnly={!editting || signDocument.status !== 'draft'}
-                        onChange={(e) => {
-                            // console.log(e.target.value)
-                            if (e.target.value === null) {
-                                record.name = undefined
-                            } else {
-                                record.name = e.target.value
-                            }
-                        }}
-                    />
-                </>
-            },
-        },
+        // {
+        //     title: 'Đợt',
+        //     dataIndex: 'name',
+        //     key: 'name',
+        //     render(value, record, index) {
+        //         return <>
+        //             <Input
+        //                 defaultValue={record.name}
+        //                 readOnly={!editting || signDocument.status !== 'draft'}
+        //                 onChange={(e) => {
+        //                     // console.log(e.target.value)
+        //                     if (e.target.value === null) {
+        //                         record.name = undefined
+        //                     } else {
+        //                         record.name = e.target.value
+        //                     }
+        //                 }}
+        //             />
+        //         </>
+        //     },
+        // },
         {
             title: 'Ngày',
             dataIndex: 'advance_date',
@@ -572,7 +560,18 @@ const SignDocumentDetail = () => {
         advance_row?.map((item) => {
             advance += (item.advance_amount ? item.advance_amount : 0)
         })
-        setRemainingAmount(advance - paid)
+
+        let amount = 0
+        if (payment_proposal_purpose === 'dept_payment') {
+            // setRemainingAmount(paid - advance)
+            if (advance < paid) {
+                amount = paid - advance
+            }
+        } else {
+            amount = paid
+        }
+
+        setRemainingAmount(amount)
     }
     const deleteRow = (index: number) => {
         if (window.confirm("Bạn có xóa dòng này?")) {
@@ -696,17 +695,20 @@ const SignDocumentDetail = () => {
 
             if (signDocument.document_detail[0] === 10) {
                 if (payment_request !== null) {
+                    if (payment_proposal_purpose === 'advance_payment') {
+                        setAdvanceRow(undefined)
+                    }
                     if (payment_request.length > 0) {
                         if (expire_date === undefined) {
                             console.log(3)
-                            await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, advance_file_id ? advance_file_id.id : undefined, payment_content, undefined, bank_id ? bank_id.id : undefined), true)
+                            await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, undefined, bank_id ? bank_id.id : undefined), true)
                         } else {
                             if ((typeof expire_date) === 'string') {
                                 console.log(2)
-                                await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? expire_date.toString() : '', bank_id ? bank_id.id : undefined), true)
+                                await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? expire_date.toString() : '', bank_id ? bank_id.id : undefined), true)
                             } else {
                                 console.log(1)
-                                await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : undefined), true)
+                                await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : undefined), true)
                             }
                         }
 
@@ -732,10 +734,11 @@ const SignDocumentDetail = () => {
                         })
                         payment_row?.map(async (item) => {
                             const data_item = sign_payment?.find((s) => s.id === item.key) as ISignPayment | undefined
-                            if (data_item === undefined) {
-
-                                await executeAction(() => create_payments(item.payment_contact ? item.payment_contact : '', item.payment_bill ? item.payment_bill : '', item.payment_date ? convertDateToString(item.payment_date) : '', item.payment_amount ? item.payment_amount : 0, signDocument.id), true)
-                            }
+                            payment_request?.map(async (pr) => {
+                                if (data_item === undefined) {
+                                    await executeAction(() => create_payments(item.payment_contact ? item.payment_contact : '', item.payment_bill ? item.payment_bill : '', item.payment_date ? convertDateToString(item.payment_date) : '', item.payment_amount ? item.payment_amount : 0, signDocument.id, pr.id), true)
+                                }
+                            })
                         })
 
 
@@ -763,8 +766,9 @@ const SignDocumentDetail = () => {
                             const data_item = sign_advance_payment?.find((s) => s.id === item.key) as ISignAdvancePayment | undefined
                             if (data_item === undefined) {
                                 // create 
-                                console.log('create')
-                                await executeAction(() => create_advance_payments(item.name ? item.name : '', item.advanve_date ? convertDateToString(item.advanve_date) : '', item.advance_amount ? item.advance_amount : 0, signDocument.id), true)
+                                payment_request?.map(async (pr) => {
+                                    await executeAction(() => create_advance_payments(item.name ? item.name : '', item.advanve_date ? convertDateToString(item.advanve_date) : '', item.advance_amount ? item.advance_amount : 0, signDocument.id, pr.id), true)
+                                })
                             }
                         })
 
@@ -834,14 +838,14 @@ const SignDocumentDetail = () => {
             if (signDocument.document_detail[0] === 7) {
                 fetchTemporaryLeave(signDocument.id)
                 fetchTemporaryLeaveLine(signDocument.id)
-            }
-            if (signDocument.document_detail[0] === 9) {
+            } else if (signDocument.document_detail[0] === 9) {
                 fetchAdvancePaymentRequest(signDocument.id)
-            }
-            if (signDocument.document_detail[0] === 10) {
+            } else if (signDocument.document_detail[0] === 10) {
                 fetchPaymentRequest()
                 fetchSignPayment()
                 fetchAdvancePayment()
+            } else {
+
             }
         }
     }, [id])
@@ -850,7 +854,6 @@ const SignDocumentDetail = () => {
         if (signDocument.document_detail[0] === 10) {
             if (payment_request !== null) {
                 if (payment_request.length > 0) {
-                    console.log(payment_request[0])
                     if (payment_request[0].pay_content) {
                         setPaymentContent(payment_request[0].pay_content)
                     } else {
@@ -862,6 +865,9 @@ const SignDocumentDetail = () => {
                     } else {
                         setBankId(undefined)
                     }
+
+                    setPaymentProposalPurpose(payment_request[0].payment_proposal_purpose)
+
                     if (signDocument.partner_id) {
                         const partner = res_partner?.find((item) => item.id === signDocument.partner_id?.at(0)) as IResPartner | undefined
                         setPartnerId(partner)
@@ -931,6 +937,7 @@ const SignDocumentDetail = () => {
     useEffect(() => {
         if (signDocument.document_detail[0] === 9) {
             if (advance_payment_request !== null) {
+                console.log(advance_payment_request)
                 if (advance_payment_request.length > 0) {
                     const partner = res_partner?.find((item) => item.id === advance_payment_request[0].partner_id[0])
                     const file = account_payment_res_file?.find((item) => item.id === (advance_payment_request[0].advance_file_id ? advance_payment_request[0].advance_file_id[0] : 0))
@@ -960,8 +967,7 @@ const SignDocumentDetail = () => {
     useEffect(() => {
         getCurrentStageAction()
     }, [current_satge_action_ids])
-    console.log(advance_row)
-    console.log(payment_row)
+    console.log(payment_request)
     return (
         <>
             {contextHolder}
@@ -1231,7 +1237,7 @@ const SignDocumentDetail = () => {
                                                             <Select
                                                                 style={{ width: '100%' }}
                                                                 disabled={!editting || signDocument.status !== 'draft'}
-                                                                defaultValue={payment_method}
+                                                                value={payment_method}
                                                                 onChange={(value: string) => { setPaymentMethod(value) }}
                                                                 options={[
                                                                     { value: 'bank', label: 'Chuyển khoản' },
@@ -1311,6 +1317,28 @@ const SignDocumentDetail = () => {
                                                     }}>
                                                         <Row>
                                                             <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                <b>Mục đích đề nghị thanh toán: </b>
+                                                            </Col>
+                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                <Select
+                                                                    style={{ width: '100%' }}
+                                                                    value={payment_proposal_purpose ? payment_proposal_purpose : ''}
+                                                                    disabled={!editting || signDocument.status !== 'draft'}
+                                                                    defaultValue={payment_proposal_purpose}
+                                                                    onChange={(value: string) => { setPaymentProposalPurpose(value) }}
+                                                                    options={[
+                                                                        { value: 'advance_payment', label: 'Advance Payment' },
+                                                                        { value: 'dept_payment', label: 'Dept Payment' },
+                                                                    ]}
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                    <div style={{
+                                                        paddingBottom: '10px'
+                                                    }}>
+                                                        <Row>
+                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
                                                                 <b>Nội dung thanh toán: </b>
                                                             </Col>
                                                             <Col xs={24} sm={24} md={12} lg={12} xl={12}>
@@ -1361,7 +1389,10 @@ const SignDocumentDetail = () => {
                                                                     style={{ width: '100%' }}
                                                                     value={payment_method}
                                                                     disabled={!editting || signDocument.status !== 'draft'}
-                                                                    onChange={(value: string) => { setPaymentMethod(value) }}
+                                                                    onChange={(value: string) => {
+                                                                        setPaymentMethod(value)
+                                                                        calRemainingAmount()
+                                                                    }}
                                                                     options={[
                                                                         { value: 'bank', label: 'Chuyển khoản' },
                                                                         { value: 'cash', label: 'Tiền mặt' },
@@ -1473,38 +1504,40 @@ const SignDocumentDetail = () => {
                                                             </Col>
                                                         </Row>
                                                     </div>
-                                                    <div style={{
-                                                        paddingBottom: '10px'
-                                                    }}>
-                                                        <Row>
-                                                            <Col xs={20} sm={20} md={6} lg={6} xl={6}>
-                                                                <b>Số tiền đã tạm ứng:</b>
-                                                            </Col>
-                                                            <Col xs={24} sm={24} md={12} lg={12} xl={12}>
-                                                                <Table columns={columns_advance}
-                                                                    dataSource={advance_row}
-                                                                    pagination={false}
-                                                                    style={{ width: '100%' }} />
-                                                                {
-                                                                    !editting || signDocument.status !== 'draft' ?
-                                                                        <></> :
-                                                                        <Button style={{
-                                                                            borderRadius: '20px',
-                                                                            marginTop: '5px',
-                                                                        }} type="dashed" icon={<PlusCircleFilled />} onClick={() => {
-                                                                            setAdvanceRow((prev) => {
-                                                                                return [...(prev ? prev : []), {
-                                                                                    key: prev ? prev.length > 0 ? prev[prev.length - 1].key + 1 : 0 : 0,
-                                                                                    name: undefined,
-                                                                                    advanve_date: undefined,
-                                                                                    advance_amount: undefined,
-                                                                                }]
-                                                                            })
-                                                                        }}>Thêm dòng</Button>
-                                                                }
-                                                            </Col>
-                                                        </Row>
-                                                    </div>
+                                                    {payment_proposal_purpose === 'advance_payment' ? <></> :
+                                                        <div style={{
+                                                            paddingBottom: '10px'
+                                                        }}>
+                                                            <Row>
+                                                                <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                                                    <b>Số tiền đã tạm ứng:</b>
+                                                                </Col>
+                                                                <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                                                    <Table columns={columns_advance}
+                                                                        dataSource={advance_row}
+                                                                        pagination={false}
+                                                                        style={{ width: '100%' }} />
+                                                                    {
+                                                                        !editting || signDocument.status !== 'draft' ?
+                                                                            <></> :
+                                                                            <Button style={{
+                                                                                borderRadius: '20px',
+                                                                                marginTop: '5px',
+                                                                            }} type="dashed" icon={<PlusCircleFilled />} onClick={() => {
+                                                                                setAdvanceRow((prev) => {
+                                                                                    return [...(prev ? prev : []), {
+                                                                                        key: prev ? prev.length > 0 ? prev[prev.length - 1].key + 1 : 0 : 0,
+                                                                                        name: undefined,
+                                                                                        advanve_date: undefined,
+                                                                                        advance_amount: undefined,
+                                                                                    }]
+                                                                                })
+                                                                            }}>Thêm dòng</Button>
+                                                                    }
+                                                                </Col>
+                                                            </Row>
+                                                        </div>
+                                                    }
                                                     <div style={{
                                                         paddingBottom: '10px'
                                                     }}>
@@ -1515,7 +1548,7 @@ const SignDocumentDetail = () => {
                                                             <Col xs={24} sm={24} md={12} lg={12} xl={12}>
                                                                 <InputNumber
                                                                     style={{ width: '100%' }}
-                                                                    disabled={!editting || signDocument.status !== 'draft'}
+                                                                    // disabled={!editting || signDocument.status !== 'draft'}
                                                                     value={remaining_amount}
                                                                     onChange={(value) => {
                                                                         if (value === null) {

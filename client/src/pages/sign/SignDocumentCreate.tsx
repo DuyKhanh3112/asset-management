@@ -10,7 +10,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "stores/reducers";
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, set } from 'date-fns';
 import useAsyncAction from "hooks/useAsyncAction";
 import PageLoading from "widgets/PageLoading";
 import { create_sign_document, get_document_away } from "stores/actions/sign_document";
@@ -20,6 +20,7 @@ import { IAccountPaymentResFile } from "interfaces/account_payment_res_file";
 import { IResPartnerBank } from "interfaces/partner_bank";
 import { create_payments } from "stores/actions/sign_payments";
 import { create_advance_payments } from "stores/actions/sign_advance_payments";
+import { get_payment_request, update_payment_request } from "stores/actions/payment_request";
 
 interface DataTemporaryLeaveLine {
     leaveType?: ITemporaryLeaveType,
@@ -34,6 +35,7 @@ interface DataPayment {
     payment_bill?: string,
     payment_date?: Date,
     payment_amount?: number,
+    purcharse_order?: string,
 }
 
 interface DataAdvancePayment {
@@ -73,6 +75,7 @@ const SignDocumentCreate = () => {
     const [bank_id, setBankId] = useState<IResPartnerBank>()
     const [expire_date, setExpireDate] = useState<Date | undefined>(moment().toDate())
     const [remaining_amount, setRemainingAmount] = useState(0)
+    const [payment_proposal_purpose, setPaymentProposalPurpose] = useState('dept_payment')
     const [payment_row, setPaymentRow] = useState<DataPayment[]>([{
         payment_contact: undefined,
         payment_bill: undefined,
@@ -329,25 +332,25 @@ const SignDocumentCreate = () => {
         },
     ];
     const columns_advance: ColumnsType<DataAdvancePayment> = [
-        {
-            title: 'Đợt',
-            dataIndex: 'name',
-            key: 'name',
-            render(value, record, index) {
-                return <>
-                    <Input
-                        onChange={(e) => {
-                            console.log(e.target.value)
-                            if (e.target.value === null) {
-                                record.name = undefined
-                            } else {
-                                record.name = e.target.value
-                            }
-                        }}
-                    />
-                </>
-            },
-        },
+        // {
+        //     title: 'Đợt',
+        //     dataIndex: 'name',
+        //     key: 'name',
+        //     render(value, record, index) {
+        //         return <>
+        //             <Input
+        //                 onChange={(e) => {
+        //                     console.log(e.target.value)
+        //                     if (e.target.value === null) {
+        //                         record.name = undefined
+        //                     } else {
+        //                         record.name = e.target.value
+        //                     }
+        //                 }}
+        //             />
+        //         </>
+        //     },
+        // },
         {
             title: 'Ngày',
             dataIndex: 'advance_date',
@@ -416,7 +419,17 @@ const SignDocumentCreate = () => {
         advance_row.map((item) => {
             advance += (item.advance_amount ? item.advance_amount : 0)
         })
-        setRemainingAmount(advance - paid)
+        let amount = 0
+        if (payment_proposal_purpose === 'dept_payment') {
+            // setRemainingAmount(paid - advance)
+            if (advance < paid) {
+                amount = paid - advance
+            }
+        } else {
+            amount = paid
+        }
+
+        setRemainingAmount(amount)
     }
 
     const fetchDocumentAway = async () => {
@@ -435,10 +448,36 @@ const SignDocumentCreate = () => {
             const detail = sign_detail?.find((item) => item.id === template) as ISignDetail
             const company_short_name = company?.find((item) => item.id === selectEmployee?.company_id[0])?.short_name
             const name = detail.name + ' - ' + company_short_name + ' - ' + selectEmployee?.name[1]
+            let pr_payment = [] as any[]
+            let pr_advance_payment = [] as any[]
+            if (template === 10) {
+                payment_row.map((item) => {
+                    pr_payment.push([0, 'virtual_786',
+                        {
+                            'partner_id': partner_id ? partner_id.id : 0,
+                            'name': '',
+                            'payment_contract': item.payment_contact ? item.payment_contact : '',
+                            'payment_bill': item.payment_bill ? item.payment_bill : '',
+                            'date': item.payment_date ? convertDateToString(item.payment_date) : null,
+                            'amount': item.payment_amount ? item.payment_amount : 0,
+                            // 'purchase_order': ''
+                        }
+                    ])
+                })
+
+                advance_row.map((item) => {
+                    pr_advance_payment.push([0, 'virtual_786', {
+                        'date': item.advanve_date ? convertDateToString(item.advanve_date) : null,
+                        'amount': item.advance_amount,
+                    }])
+                })
+            }
+
+
             const res = await executeAction(() => create_sign_document(name, selectEmployee ? selectEmployee.id : 0, template,
                 reasonLeave, partner_id ? partner_id.id : 0, ap_amount, advance_payment_description, payment_method, advance_file_id ? advance_file_id.id : undefined,
-                payment_content ? payment_content : '', expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : 0, remaining_amount ? remaining_amount : 0
-
+                payment_content ? payment_content : '', expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : 0, remaining_amount ? remaining_amount : 0,
+                payment_proposal_purpose ? payment_proposal_purpose : '', pr_payment, pr_advance_payment
             ), true)
             if (res?.data) {
                 id = res?.data
@@ -464,23 +503,30 @@ const SignDocumentCreate = () => {
                 }
                 if (template === 10) {
                     console.log('đề nghị thanh toán')
-                    payment_row.map(async (item) => {
-                        console.log('payment')
-                        await executeAction(() => create_payments(item.payment_contact ? item.payment_contact : '',
-                            item.payment_bill ? item.payment_bill : '',
-                            item.payment_date ? convertDateToString(item.payment_date) : '',
-                            item.payment_amount ? item.payment_amount : 0, id), true)
-                    })
+                    const res_payment_request = await executeAction(() => get_payment_request(res.data), true)
+                    console.log(res_payment_request)
+                    if (res_payment_request?.data) {
+                        // payment_row.map(async (item) => {
+                        //     await executeAction(() => create_payments(item.payment_contact ? item.payment_contact : '',
+                        //         item.payment_bill ? item.payment_bill : '',
+                        //         item.payment_date ? convertDateToString(item.payment_date) : '',
+                        //         item.payment_amount ? item.payment_amount : 0,
+                        //         id,
+                        //         res_payment_request.data[0].id), true)
+                        // })
 
-                    advance_row.map(async (item) => {
-                        console.log('advance')
-                        await executeAction(() => create_advance_payments(
-                            item.name ? item.name : '',
-                            item.advanve_date ? convertDateToString(item.advanve_date) : '',
-                            item.advance_amount ? item.advance_amount : 0,
-                            id
-                        ), true)
-                    })
+                        // advance_row.map(async (item) => {
+                        //     await executeAction(() => create_advance_payments(
+                        //         item.name ? item.name : '',
+                        //         item.advanve_date ? convertDateToString(item.advanve_date) : '',
+                        //         item.advance_amount ? item.advance_amount : 0,
+                        //         id,
+                        //         res_payment_request.data[0].id
+                        //     ), true)
+                        // })
+                        // calRemainingAmount()
+                        // await executeAction(() => update_payment_request(res_payment_request.data[0].id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : undefined), true)
+                    }
                 }
             }
             setReasonLeave('')
@@ -562,6 +608,10 @@ const SignDocumentCreate = () => {
         if (template === 10) {
             if (partner_id === undefined) {
                 showErrorMessage('Vui lòng chọn đối tác')
+                return false
+            }
+            if (payment_proposal_purpose === '') {
+                showErrorMessage('Vui lòng nhập mục đích đề nghị thanh toán')
                 return false
             }
             if (payment_method !== 'bank' && payment_method !== 'cash') {
@@ -777,13 +827,15 @@ const SignDocumentCreate = () => {
                                         </Col>
                                         <Col xs={24} sm={24} md={12} lg={12} xl={12}>
                                             <Select
+                                                showSearch
+                                                optionFilterProp="label"
                                                 style={{ width: '100%' }}
                                                 onChange={(value: number) => { handleChangeResPartner(value) }}
                                                 options={
                                                     res_partner?.map((item) => {
                                                         return {
                                                             value: item.id,
-                                                            label: item.name,
+                                                            label: item.name + (item.phone ? ' - ' + item.phone : ''),
                                                         }
                                                     })
                                                 }
@@ -885,15 +937,38 @@ const SignDocumentCreate = () => {
                                         <Col xs={24} sm={24} md={12} lg={12} xl={12}>
                                             <Select
                                                 style={{ width: '100%' }}
-                                                onChange={(value: number) => { handleChangeResPartner(value) }}
+                                                onChange={(value: number) => { handleChangeResPartner(value); console.log(value) }}
                                                 options={
                                                     res_partner?.map((item) => {
                                                         return {
                                                             value: item.id,
-                                                            label: item.name,
+                                                            label: item.name + (item.phone ? ' - ' + item.phone : ''),
                                                         }
                                                     })
                                                 }
+                                            />
+                                        </Col>
+                                    </Row>
+                                </div>
+                                <div style={{
+                                    paddingBottom: '10px'
+                                }}>
+                                    <Row>
+                                        <Col xs={20} sm={20} md={6} lg={6} xl={6}>
+                                            <b>Mục đích đề nghị thanh toán: </b>
+                                        </Col>
+                                        <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                                            <Select
+                                                style={{ width: '100%' }}
+                                                defaultValue={payment_proposal_purpose}
+                                                onChange={(value: string) => {
+                                                    setPaymentProposalPurpose(value)
+                                                    calRemainingAmount()
+                                                }}
+                                                options={[
+                                                    { value: 'advance_payment', label: 'Advance Payment' },
+                                                    { value: 'dept_payment', label: 'Dept Payment' },
+                                                ]}
                                             />
                                         </Col>
                                     </Row>
@@ -1081,7 +1156,7 @@ const SignDocumentCreate = () => {
                                         </Col>
                                     </Row>
                                 </div>
-                                <div style={{
+                                {payment_proposal_purpose === 'advance_payment' ? <></> : <div style={{
                                     paddingBottom: '10px'
                                 }}>
                                     <Row>
@@ -1107,7 +1182,7 @@ const SignDocumentCreate = () => {
                                             }}>Thêm dòng</Button>
                                         </Col>
                                     </Row>
-                                </div>
+                                </div>}
 
                                 <div style={{
                                     paddingBottom: '10px'
@@ -1120,6 +1195,7 @@ const SignDocumentCreate = () => {
                                             <InputNumber
                                                 style={{ width: '100%' }}
                                                 // required={true}
+
                                                 value={remaining_amount}
                                                 onChange={(value) => {
                                                     if (value === null) {

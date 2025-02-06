@@ -11,11 +11,12 @@ export const create_payments = (
     date: string,
     amount: number,
     sea_sign_document_id: number,
+    payment_request_id: number
 ) => {
     return async (dispatch: AppDispatch) => {
         dispatch(getSignPayments.request());
         try {
-            const response = await createPaymentsApi(payment_contract, payment_bill, date, amount, sea_sign_document_id);
+            const response = await createPaymentsApi(payment_contract, payment_bill, date, amount, sea_sign_document_id, payment_request_id);
             if (response.status !== 200) {
                 dispatch(getSignPayments.failure(null));
                 return { success: false, message: response.data?.msg };

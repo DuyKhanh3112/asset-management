@@ -18,6 +18,7 @@ router.get("/get-sign-detail", authenticateUser, signDocumentCtl.getSignDetailMo
 router.get("/get-temporary-leave/:id", authenticateUser, signDocumentCtl.getTemporaryLeave);
 router.get("/get-temporary-leave-line/:id", authenticateUser, signDocumentCtl.getTemporaryLeaveLine);
 router.get("/get-advance-payment-request/:id", authenticateUser, signDocumentCtl.getAdvancePaymentRequest);
+
 router.post("/create-document", authenticateUser, signDocumentCtl.createDocument);
 router.post("/create-leave-line", authenticateUser, signDocumentCtl.createTemporaryLeaveLine);
 router.post("/delete-leave-line", authenticateUser, signDocumentCtl.deleteTemporaryLeaveLine);
@@ -39,5 +40,7 @@ router.get('/get-sign-payment/:id', authenticateUser, signDocumentCtl.getSignPay
 router.get('/get-sign-advance-payment/:id', authenticateUser, signDocumentCtl.getSignAdvancePayments)
 router.get('/get-payment-request/:id', authenticateUser, signDocumentCtl.getPaymentRequest)
 router.post('/update-payment-request', authenticateUser, signDocumentCtl.updatePaymentRequest)
+
+router.get('/get-purchase-order/:id', authenticateUser, signDocumentCtl.getPurchaseOrder)
 
 export default router.stack;

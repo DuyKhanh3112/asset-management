@@ -232,6 +232,7 @@ const MainLayout: FC<MainLayoutProps> = ({
         getMyCurrentCompanyShortName();
         fetchEmployeeTemporary()
         fetchEmployeeMultiCompany()
+        // fetchDocumentDetail()
     }, [])
 
     useEffect(() => {

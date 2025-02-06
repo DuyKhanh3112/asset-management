@@ -75,7 +75,10 @@ export function createSignDocumentApi(
     payment_content?: string,
     expire_date?: string,
     bank_id?: number,
-    remaining_amount?: number
+    remaining_amount?: number,
+    payment_proposal_purpose?: string,
+    pr_payments?: any[],
+    pr_advance_payments?: any[]
 ) {
     return instance.post("/api/create-document", {
         "name": name_doc,
@@ -90,7 +93,10 @@ export function createSignDocumentApi(
         "payment_content": payment_content,
         "expire_date": expire_date,
         "bank_id": bank_id,
-        "remaining_amount": remaining_amount
+        "remaining_amount": remaining_amount,
+        "payment_proposal_purpose": payment_proposal_purpose,
+        "pr_payments": pr_payments,
+        "pr_advance_payments": pr_advance_payments
     })
 }
 

@@ -14,4 +14,5 @@ export interface IPaymentRequest {
     bank_name?: string;
     bank_address?: string;
     bank_ids?: (number | string)[];
+    payment_proposal_purpose: string;
 }
