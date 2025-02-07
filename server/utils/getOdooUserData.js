@@ -1413,28 +1413,28 @@ export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_
   })
 }
 
-export async function getPurchaseOrder(odoo, id) {
-  return new Promise((resolve, reject) => {
-    const inParams = []
-    inParams.push([
-      ['payment_vendor', '=', parseInt(id)]
-    ]);
-    inParams.push([
-      'id',
-      'name',
-      'payment_vendor',
-    ]);
-    inParams.push(0);
-    const params = [];
-    params.push(inParams);
-    odoo.execute_kw("purchase.order", 'search_read', params, (err, assets) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(assets);
-      }
-    });
-  })
-}
+// export async function getPurchaseOrder(odoo, id) {
+//   return new Promise((resolve, reject) => {
+//     const inParams = []
+//     inParams.push([
+//       ['payment_vendor', '=', parseInt(id)]
+//     ]);
+//     inParams.push([
+//       'id',
+//       'name',
+//       'payment_vendor',
+//     ]);
+//     inParams.push(0);
+//     const params = [];
+//     params.push(inParams);
+//     odoo.execute_kw("purchase.order", 'search_read', params, (err, assets) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(assets);
+//       }
+//     });
+//   })
+// }
 
 
