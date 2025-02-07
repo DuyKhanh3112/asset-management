@@ -319,16 +319,6 @@ export const signDocumentCtl = {
             res.status(500).json({ msg: error.message })
         }
     },
-
-    // getPurchaseOrder: async (req, res) => {
-    //     try {
-    //         const { id } = req.params
-    //         const data = await getPurchaseOrder(req.odoo, id)
-    //         res.status(200).json({ data })
-    //     } catch (error) {
-    //         res.status(500).json({ msg: error.message })
-    //     }
-    // },
 }
 
 export default signDocumentCtl

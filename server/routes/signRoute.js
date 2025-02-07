@@ -41,6 +41,4 @@ router.get('/get-sign-advance-payment/:id', authenticateUser, signDocumentCtl.ge
 router.get('/get-payment-request/:id', authenticateUser, signDocumentCtl.getPaymentRequest)
 router.post('/update-payment-request', authenticateUser, signDocumentCtl.updatePaymentRequest)
 
-// router.get('/get-purchase-order/:id', authenticateUser, signDocumentCtl.getPurchaseOrder)
-
 export default router.stack;
