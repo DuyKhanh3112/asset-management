@@ -222,9 +222,9 @@ const SignDocumentDetail = () => {
                 })
                 // eslint-disable-next-line array-callback-return
                 advance_row?.map((item) => {
-                    if (item.name === undefined || item.name === '') {
-                        flag_advance = false;
-                    }
+                    // if (item.name === undefined || item.name === '') {
+                    //     flag_advance = false;
+                    // }
                     if (item.advanve_date === undefined) {
                         flag_advance = false;
                     }
