@@ -3,14 +3,14 @@ import { Button, Col, DatePicker, Divider, GetProp, Input, InputNumber, message,
 import TextArea from "antd/es/input/TextArea";
 import MainLayout from "components/app/MainLayout"
 import { colors } from "constants/color";
-import { ICompany, IEmployeeMultiCompany, IResPartner, ISignDetail, ITemporaryLeave, ITemporaryLeaveLine, ITemporaryLeaveType } from "interfaces";
+import { ICompany, IEmployeeMultiCompany, IResPartner, ISignDetail, ITemporaryLeaveType } from "interfaces";
 import { IUser } from "interfaces/user";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "stores/reducers";
-import { differenceInDays, set } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 import useAsyncAction from "hooks/useAsyncAction";
 import PageLoading from "widgets/PageLoading";
 import { create_sign_document, get_document_away } from "stores/actions/sign_document";
@@ -18,9 +18,7 @@ import { get_temporary_leave } from "stores/actions/temporary_leave";
 import { create_temporary_leave_line, get_temporary_leave_line } from "stores/actions/temporary_leave_line";
 import { IAccountPaymentResFile } from "interfaces/account_payment_res_file";
 import { IResPartnerBank } from "interfaces/partner_bank";
-import { create_payments } from "stores/actions/sign_payments";
-import { create_advance_payments } from "stores/actions/sign_advance_payments";
-import { get_payment_request, update_payment_request } from "stores/actions/payment_request";
+import { get_payment_request } from "stores/actions/payment_request";
 
 interface DataTemporaryLeaveLine {
     leaveType?: ITemporaryLeaveType,
@@ -59,8 +57,8 @@ const SignDocumentCreate = () => {
     const [template, setTemplate] = useState(0)
     const [data, setData] = useState<DataTemporaryLeaveLine[]>()
     const [reasonLeave, setReasonLeave] = useState('')
-    var temporary_leave = useSelector((state: RootState) => state.temporary_leave?.data) as ITemporaryLeave[] | null;
-    var temporary_leave_line = useSelector((state: RootState) => state.temporary_leave_line?.data) as ITemporaryLeaveLine[] | null;
+    // var temporary_leave = useSelector((state: RootState) => state.temporary_leave?.data) as ITemporaryLeave[] | null;
+    // var temporary_leave_line = useSelector((state: RootState) => state.temporary_leave_line?.data) as ITemporaryLeaveLine[] | null;
 
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -340,7 +338,7 @@ const SignDocumentCreate = () => {
         //         return <>
         //             <Input
         //                 onChange={(e) => {
-        //                     console.log(e.target.value)
+        //                     //console.log(e.target.value)
         //                     if (e.target.value === null) {
         //                         record.name = undefined
         //                     } else {
@@ -433,13 +431,11 @@ const SignDocumentCreate = () => {
     }
 
     const fetchDocumentAway = async () => {
-        console.log('load away')
+        //console.log('load away')
         await executeAction(() => get_document_away(), true)
     }
     const fetchTemporaryLine = async (id: number) => {
-        const res = await executeAction(() => get_temporary_leave_line(id), true)
-        console.log('line')
-        console.log(res)
+        await executeAction(() => get_temporary_leave_line(id), true)
     }
 
     const handleCreateDocument = async () => {
@@ -485,7 +481,7 @@ const SignDocumentCreate = () => {
                     const resLeave = await executeAction(() => get_temporary_leave(res.data), true)
                     if (resLeave?.data) {
                         data?.map(async (line) => {
-                            console.log(line)
+                            //console.log(line)
                             await executeAction(() => create_temporary_leave_line(
                                 line.rangeDate ? convertDateToString(line.rangeDate[0]) : '',
                                 line.rangeDate ? convertDateToString(line.rangeDate[1]) : '',
@@ -499,12 +495,12 @@ const SignDocumentCreate = () => {
                     }
                 }
                 if (template === 9) {
-                    console.log('tạm ứng')
+                    //console.log('tạm ứng')
                 }
                 if (template === 10) {
-                    console.log('đề nghị thanh toán')
+                    //console.log('đề nghị thanh toán')
                     const res_payment_request = await executeAction(() => get_payment_request(res.data), true)
-                    console.log(res_payment_request)
+                    //console.log(res_payment_request)
                     if (res_payment_request?.data) {
                         // payment_row.map(async (item) => {
                         //     await executeAction(() => create_payments(item.payment_contact ? item.payment_contact : '',
@@ -559,8 +555,8 @@ const SignDocumentCreate = () => {
                 type: 'success',
                 content: 'Tạo văn bản thành công',
             });
-            console.log(temporary_leave)
-            console.log(temporary_leave_line)
+            //console.log(temporary_leave)
+            //console.log(temporary_leave_line)
         }
     }
     const checkValid = () => {
@@ -937,7 +933,9 @@ const SignDocumentCreate = () => {
                                         <Col xs={24} sm={24} md={12} lg={12} xl={12}>
                                             <Select
                                                 style={{ width: '100%' }}
-                                                onChange={(value: number) => { handleChangeResPartner(value); console.log(value) }}
+                                                onChange={(value: number) => {
+                                                    handleChangeResPartner(value);
+                                                }}
                                                 options={
                                                     res_partner?.map((item) => {
                                                         return {

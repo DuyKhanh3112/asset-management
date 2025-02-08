@@ -27,7 +27,7 @@ export const authCtrl = {
             if (isConnected.includes(undefined)) return res.status(400).json({ msg: 'Kết nối với Odoo gặp trục trặc. Xin liên hệ với nhà phát triển' });
 
             const user = await getUserData(odoo, isConnected[0]);
-            console.log(user)
+            //console.log(user)
             if (!user) return res.status(400).json({ msg: 'Dữ liệu người dùng không lấy được. Xin liên hệ với nhà phát triển' });
 
             // Tạo hoặc cập nhật dữ liệu user vào MongoDB
@@ -46,7 +46,7 @@ export const authCtrl = {
             attachCookiesToResponse({ res, data: { username } })
             return res.status(200).json({ msg: "Đăng nhập thành công!", data: user })
         } catch (error) {
-            console.log(error);
+            //console.log(error);
             return res.status(500).json({ msg: error.message });
         }
     },
@@ -101,7 +101,7 @@ export const authCtrl = {
                 res.status(400).json({ msg: 'Dữ liệu người dùng không tìm thấy' });
             }
         } catch (error) {
-            console.log(error);
+            //console.log(error);
             res.status(500).json({ msg: error.message });
         }
     },
@@ -110,7 +110,7 @@ export const authCtrl = {
         try {
             res.status(200).json({ data: req.user[0] })
         } catch (error) {
-            console.log(error);
+            //console.log(error);
             res.status(500).json({ msg: error.message });
         }
     },
@@ -121,7 +121,7 @@ export const authCtrl = {
 
             res.status(200).json({ msg: 'user logged out!' });
         } catch (error) {
-            console.log(error);
+            //console.log(error);
             res.status(500).json({ msg: error.message });
         }
     }

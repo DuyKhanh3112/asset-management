@@ -15,7 +15,7 @@ export function updatePaymentRequestApi(
     expire_date?: string,
     bank_ids?: number
 ) {
-    return instance.post("/api/update-payment-request", {
+    return instance.put("/api/update-payment-request", {
         "id": id,
         "advance_file_id": advance_file_id,
         "remaining_amount": remaining_amount,

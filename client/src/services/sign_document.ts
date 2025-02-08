@@ -129,7 +129,7 @@ export function updateTemporaryLeaveLineApi(
     leave_reason_type: number,
     leave_date_type: string,
 ) {
-    return instance.post("/api/update-leave-line", {
+    return instance.put("/api/update-leave-line", {
         "id": id,
         "leave_date_from": leave_date_from,
         "leave_date_to": leave_date_to,
@@ -140,13 +140,13 @@ export function updateTemporaryLeaveLineApi(
 }
 
 export function deleteTemporaryLeaveLineApi(id: number) {
-    return instance.post("/api/delete-leave-line", { "id": id })
+    return instance.delete(`/api/delete-leave-line/${id}`)
 }
 
 export function updateTemporaryLeaveApi(
     id: number,
     reason_leaving: string) {
-    return instance.post("/api/update-temporary-leave", {
+    return instance.put("/api/update-temporary-leave", {
         "id": id,
         "reason_leaving": reason_leaving
     })
@@ -160,7 +160,7 @@ export function updateAdvancePaymentRequestApi(
     advance_payment_method: string,
     advance_file_id?: number
 ) {
-    return instance.post("/api/update-advance-payment-request", {
+    return instance.put("/api/update-advance-payment-request", {
         "id": id,
         "amount": amount,
         "advance_payment_description": advance_payment_description,

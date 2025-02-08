@@ -67,7 +67,7 @@
 
 
 //     const getMyCurrentCompanyShortName = () => {
-//         console.log(abc)
+//         //console.log(abc)
 //         if (companies != null) {
 //             if (user != null) {
 //                 if (user!.company_id != null) {
@@ -119,7 +119,7 @@
 //         navigate(`/`);
 //     }
 
-//     console.log(window.location.href)
+//     //console.log(window.location.href)
 
 //     if (loading || isChange) return (<PageLoading />);
 

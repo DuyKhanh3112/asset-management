@@ -614,7 +614,7 @@ export async function getCurrentStageAction(odoo, user, id) {
     odoo.execute_kw("sea.sign.document", 'get_current_stage_actions', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
       }
@@ -632,7 +632,7 @@ export async function confirmActionDocument(odoo, user, id) {
     odoo.execute_kw("sea.sign.document.stage.action", 'action_confirm', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
       }
@@ -894,7 +894,7 @@ export async function createSignDocument(odoo, user, name, employee_request, doc
         reject(err);
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -919,10 +919,10 @@ export async function createTemporaryLeaveLine(odoo, leave_date_from, leave_date
     odoo.execute_kw("sea.sign.temporary.leave.line", 'create', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -937,10 +937,10 @@ export async function deleteTemporaryLeaveLine(odoo, id) {
     odoo.execute_kw("sea.sign.temporary.leave.line", 'unlink', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -963,10 +963,10 @@ export async function updateTemporaryLeaveLine(odoo, id, leave_date_from, leave_
     odoo.execute_kw("sea.sign.temporary.leave.line", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -984,10 +984,10 @@ export async function updateTemporaryLeave(odoo, id, reason_leaving) {
     odoo.execute_kw("sea.sign.temporary.leave", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1037,10 +1037,10 @@ export async function updateAdvancePaymentRequest(odoo, id, amount, advance_paym
     odoo.execute_kw("sea.sign.advance.payment.request", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1104,7 +1104,7 @@ export async function getResPartnerBank(odoo, user) {
 export async function createSignPayments(odoo, payment_contract, payment_bill, amount, date, sea_sign_document_id, payment_request_id) {
   return new Promise((resolve, reject) => {
     var inParams = [];
-    console.log("payment_request_id:" + payment_request_id)
+    //console.log("payment_request_id:" + payment_request_id)
     if (date == '') {
       inParams.push({
         "payment_contract": payment_contract,
@@ -1128,10 +1128,10 @@ export async function createSignPayments(odoo, payment_contract, payment_bill, a
     odoo.execute_kw("sea.sign.payments", 'create', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1161,10 +1161,10 @@ export async function updateSignPayments(odoo, id, payment_contract, payment_bil
     odoo.execute_kw("sea.sign.payments", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1179,10 +1179,10 @@ export async function deleteSignPayments(odoo, id) {
     odoo.execute_kw("sea.sign.payments", 'unlink', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1190,7 +1190,7 @@ export async function deleteSignPayments(odoo, id) {
 
 export async function createAdvancePayments(odoo, name, amount, date, sea_sign_document_id, payment_request_id) {
   return new Promise((resolve, reject) => {
-    console.log("payment_request_id:" + payment_request_id)
+    //console.log("payment_request_id:" + payment_request_id)
     var inParams = [];
     if (date == '') {
       inParams.push({
@@ -1211,10 +1211,10 @@ export async function createAdvancePayments(odoo, name, amount, date, sea_sign_d
     odoo.execute_kw("sea.sign.advance.payments", 'create', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1242,10 +1242,10 @@ export async function updateAdvancePayments(odoo, id, name, amount, date) {
     odoo.execute_kw("sea.sign.advance.payments", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1259,10 +1259,10 @@ export async function deleteAdvancePayments(odoo, id) {
     odoo.execute_kw("sea.sign.advance.payments", 'unlink', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })
@@ -1310,7 +1310,7 @@ export async function getPaymentRequest(odoo, id) {
 export async function getSignPayments(odoo, id) {
   return new Promise((resolve, reject) => {
     const inParams = []
-    console.log(id)
+    //console.log(id)
     inParams.push([
       ["payment_request_id.sea_sign_document_id.id", '=', id]
     ]);
@@ -1348,7 +1348,7 @@ export async function getSignPayments(odoo, id) {
 export async function getSignAdvancePayments(odoo, id) {
   return new Promise((resolve, reject) => {
     const inParams = []
-    console.log('aaa: ', id)
+    //console.log('aaa: ', id)
     inParams.push([
       ['payment_request_id.sea_sign_document_id.id', '=', id]
     ]);
@@ -1404,10 +1404,10 @@ export async function updatePaymentRequest(odoo, id, advance_file_id, remaining_
     odoo.execute_kw("sea.sign.document", 'write', params, (err, assets) => {
       if (err) {
         reject(err);
-        console.log(err)
+        //console.log(err)
       } else {
         resolve(assets);
-        console.log(assets)
+        //console.log(assets)
       }
     });
   })

@@ -67,12 +67,12 @@ const URI = process.env.MONGO_URI;
 const start = async () => {
   try {
     await mongoose.connect(URI);
-    console.log("MongoDB connected")
-    app.listen(port, () => {  
-      console.log("Server is listening on port", port);
+    //console.log("MongoDB connected")
+    app.listen(port, () => {
+      //console.log("Server is listening on port", port);
     });
   } catch (err) {
-    console.log(err)
+    //console.log(err)
   }
 };
 

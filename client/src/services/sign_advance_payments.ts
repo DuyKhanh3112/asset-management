@@ -22,7 +22,7 @@ export function updateAdvancePaymentsApi(
     date: string,
     amount: number,
 ) {
-    return instance.post("/api/update-advance-payments", {
+    return instance.put("/api/update-advance-payments", {
         "id": id,
         "name": name,
         "date": date,
@@ -31,7 +31,7 @@ export function updateAdvancePaymentsApi(
 }
 
 export function deleteAdvancePaymentsApi(id: number) {
-    return instance.get(`/api/delete-advance-payments/${id}`);
+    return instance.delete(`/api/delete-advance-payments/${id}`);
 }
 
 export function getAdvancePaymentsApi(id: number) {

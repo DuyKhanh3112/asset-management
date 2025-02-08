@@ -15,7 +15,7 @@ export const get_temporary_leave_line = (id: number) => {
                 return { success: false, message: response.data?.msg };
             }
             dispatch(getTemporaryLeaveLine.success(response.data?.data || []));
-            console.log(response.data?.data)
+            //console.log(response.data?.data)
             return { success: true, message: response.data?.msg, data: response.data?.data };
         } catch (e) {
             dispatch(getTemporaryLeaveLine.failure(null));

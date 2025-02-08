@@ -25,7 +25,7 @@ export function updatePaymentsApi(
     date: string,
     amount: number,
 ) {
-    return instance.post("/api/update-payments", {
+    return instance.put("/api/update-payments", {
         "id": id,
         "payment_contract": payment_contract,
         "payment_bill": payment_bill,
@@ -35,7 +35,7 @@ export function updatePaymentsApi(
 }
 
 export function deletePaymentApi(id: number) {
-    return instance.get(`/api/delete-payments/${id}`);
+    return instance.delete(`/api/delete-payments/${id}`);
 }
 
 export function getPaymentsApi(id: number) {

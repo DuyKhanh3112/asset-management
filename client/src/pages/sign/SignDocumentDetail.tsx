@@ -106,6 +106,7 @@ const SignDocumentDetail = () => {
 
     const [advance_row, setAdvanceRow] = useState<DataAdvancePayment[]>()
 
+    const [waiting, setWaiting] = useState(false)
 
 
     const fetchDocumentStage = async () => {
@@ -177,8 +178,9 @@ const SignDocumentDetail = () => {
     }
 
     const handleConfirmAction = async (id: number) => {
-        //// console.log(dataDetail.length)
+        //// //console.log(dataDetail.length)
         if (checkValid()) {
+            setWaiting(true)
             if (signDocument.document_detail[0] === 7) {
                 if (dataDetail?.length === 0) {
                     showErrorMessage('Vui lòng nhập đầy đủ thông tin chi tiết trước khi gửi văn bản.')
@@ -246,7 +248,7 @@ const SignDocumentDetail = () => {
             fetchDocumentById()
             fetchDocumentStage()
             fetchCurrentStageAction()
-
+            setWaiting(false)
             messageApi.open({
                 type: 'success',
                 content: 'Gửi văn bản thành công',
@@ -477,7 +479,7 @@ const SignDocumentDetail = () => {
         //                 defaultValue={record.name}
         //                 readOnly={!editting || signDocument.status !== 'draft'}
         //                 onChange={(e) => {
-        //                     // console.log(e.target.value)
+        //                     // //console.log(e.target.value)
         //                     if (e.target.value === null) {
         //                         record.name = undefined
         //                     } else {
@@ -575,9 +577,9 @@ const SignDocumentDetail = () => {
     }
     const deleteRow = (index: number) => {
         if (window.confirm("Bạn có xóa dòng này?")) {
-            //console.log(index)
+            ////console.log(index)
             const dataCoppy = dataDetail?.filter((_, i) => i !== index)
-            //console.log(dataCoppy)
+            ////console.log(dataCoppy)
             setDataDetail(dataCoppy)
         }
     }
@@ -592,7 +594,7 @@ const SignDocumentDetail = () => {
         })
     }
     const handleChangeLeaveType = (index: number, value: number) => {
-        //console.log(temporary_leave_type)
+        ////console.log(temporary_leave_type)
         const type = temporary_leave_type?.find((item) => item.id === value) as ITemporaryLeaveType || undefined
         const rowIndex = dataDetail?.at(index) as DataTemporaryLeaveLine
 
@@ -636,6 +638,7 @@ const SignDocumentDetail = () => {
 
     const handleUpdate = async () => {
         if (checkValid()) {
+            setWaiting(true)
             if (signDocument.document_detail[0] === 7) {
                 if (temporary_leave) {
                     if (reasonLeave !== temporary_leave[0].reason_leaving) {
@@ -643,16 +646,18 @@ const SignDocumentDetail = () => {
                         await executeAction(() => update_temporary_leave(temporary_leave[0].id, reasonLeave), true)
                     }
                 }
-                //console.log(dataDetail?.map((item) => item.key))
+                ////console.log(dataDetail?.map((item) => item.key))
                 if (temporary_leave_line) {
                     temporary_leave_line?.map(async (line) => {
                         const dataItem = dataDetail?.find((item) => item.key === line.id) as DataTemporaryLeaveLine | null
-                        if (dataItem === null) {
-                            //console.log('delete' + line.id)
+                        //console.log('===========')
+                        //console.log(dataItem)
+                        if (dataItem === null || dataItem === undefined) {
+                            // //console.log('delete' + line.id)
                             await executeAction(() => delete_temporary_leave_line(line.id), true)
                         }
                         else {
-                            //console.log('update' + line.id)
+                            ////console.log('update' + line.id)
                             await executeAction(() => update_temporary_leave_line(
                                 dataItem.key,
                                 dataItem.range_date ? convertDateToString(dataItem.range_date[0]) : '',
@@ -667,7 +672,7 @@ const SignDocumentDetail = () => {
                 if (dataDetail && temporary_leave) {
                     dataDetail.map(async (item) => {
                         const dataItem = temporary_leave_line?.find((line) => line.id === item.key) as ITemporaryLeaveLine || null
-                        if (dataItem === null) {
+                        if (dataItem === null || dataItem === undefined) {
                             await executeAction(() => create_temporary_leave_line(
                                 item.range_date ? convertDateToString(item.range_date[0]) : '',
                                 item.range_date ? convertDateToString(item.range_date[1]) : '',
@@ -683,7 +688,6 @@ const SignDocumentDetail = () => {
                 await fetchTemporaryLeave(signDocument.id)
                 await fetchTemporaryLeaveLine(signDocument.id)
             }
-
             if (signDocument.document_detail[0] === 9) {
                 if (advance_payment_request !== null) {
                     if (advance_payment_request.length > 0) {
@@ -692,7 +696,6 @@ const SignDocumentDetail = () => {
                     }
                 }
             }
-
             if (signDocument.document_detail[0] === 10) {
                 if (payment_request !== null) {
                     if (payment_proposal_purpose === 'advance_payment') {
@@ -700,14 +703,14 @@ const SignDocumentDetail = () => {
                     }
                     if (payment_request.length > 0) {
                         if (expire_date === undefined) {
-                            console.log(3)
+                            //console.log(3)
                             await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, undefined, bank_id ? bank_id.id : undefined), true)
                         } else {
                             if ((typeof expire_date) === 'string') {
-                                console.log(2)
+                                //console.log(2)
                                 await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? expire_date.toString() : '', bank_id ? bank_id.id : undefined), true)
                             } else {
-                                console.log(1)
+                                //console.log(1)
                                 await executeAction(() => update_payment_request(signDocument.id, partner_id ? partner_id.id : 0, remaining_amount, payment_method, payment_proposal_purpose, advance_file_id ? advance_file_id.id : undefined, payment_content, expire_date ? convertDateToString(expire_date) : '', bank_id ? bank_id.id : undefined), true)
                             }
                         }
@@ -716,7 +719,7 @@ const SignDocumentDetail = () => {
                             const data_item = payment_row?.find((r) => r.key === item.id) as DataPayment | undefined
                             if (data_item === undefined) {
                                 // delete
-                                console.log('delete')
+                                //console.log('delete')
                                 await executeAction(() => delete_payments(item.id), true)
                             } else {
                                 // update
@@ -746,7 +749,7 @@ const SignDocumentDetail = () => {
                             const data_item = advance_row?.find((r) => r.key === item.id) as DataAdvancePayment | undefined
                             if (data_item === undefined) {
                                 // delete
-                                console.log('delete')
+                                //console.log('delete')
                                 await executeAction(() => delete_advance_payments(item.id), true)
                             } else {
                                 // update
@@ -780,6 +783,7 @@ const SignDocumentDetail = () => {
             }
             fetchDocumentById();
             setEditting(false)
+            setWaiting(false)
             messageApi.open({
                 type: 'success',
                 content: 'Cập nhật văn bản thành công',
@@ -906,7 +910,7 @@ const SignDocumentDetail = () => {
             }
         })
         setAdvanceRow(list)
-        // console.log(list)
+        // //console.log(list)
     }, [sign_advance_payment, loading])
 
     useEffect(() => {
@@ -937,7 +941,7 @@ const SignDocumentDetail = () => {
     useEffect(() => {
         if (signDocument.document_detail[0] === 9) {
             if (advance_payment_request !== null) {
-                console.log(advance_payment_request)
+                //console.log(advance_payment_request)
                 if (advance_payment_request.length > 0) {
                     const partner = res_partner?.find((item) => item.id === advance_payment_request[0].partner_id[0])
                     const file = account_payment_res_file?.find((item) => item.id === (advance_payment_request[0].advance_file_id ? advance_payment_request[0].advance_file_id[0] : 0))
@@ -967,12 +971,11 @@ const SignDocumentDetail = () => {
     useEffect(() => {
         getCurrentStageAction()
     }, [current_satge_action_ids])
-    console.log(payment_request)
     return (
         <>
             {contextHolder}
             <MainLayout title={signDocument === undefined ? '' : signDocument.name}>
-                {loading ? <PageLoading /> :
+                {loading || waiting ? <PageLoading /> :
                     signDocument === undefined
                         ? <Empty /> :
                         <>
@@ -1498,7 +1501,7 @@ const SignDocumentDetail = () => {
                                                                                 payment_amount: undefined,
                                                                             }]
                                                                         })
-                                                                        // console.log(payment_row)
+                                                                        // //console.log(payment_row)
                                                                     }}>Thêm dòng</Button>}
 
                                                             </Col>

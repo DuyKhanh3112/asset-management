@@ -136,7 +136,7 @@ export const signDocumentCtl = {
 
     createDocument: async (req, res) => {
         try {
-            // console.log(req)
+            // //console.log(req)
             const { name, employee_request, document_detail, reason_leaving,
                 partner_id, amount, advance_payment_description, advance_payment_method, advance_file_id,
                 payment_content, expire_date, bank_id, remaining_amount, payment_proposal_purpose, pr_payments, pr_advance_payments } = req.body;
@@ -146,7 +146,7 @@ export const signDocumentCtl = {
                 payment_content, expire_date, bank_id, remaining_amount, payment_proposal_purpose, pr_payments, pr_advance_payments);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
@@ -156,18 +156,18 @@ export const signDocumentCtl = {
             const data = await createTemporaryLeaveLine(req.odoo, leave_date_from, leave_date_to, num_leave_date_to, leave_reason_type, leave_date_type, temporary_leave_id, sea_sign_document_id);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
 
     deleteTemporaryLeaveLine: async (req, res) => {
         try {
-            const { id } = req.body;
+            const { id } = req.params;
             const data = await deleteTemporaryLeaveLine(req.odoo, id);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
@@ -178,7 +178,7 @@ export const signDocumentCtl = {
             const data = await updateTemporaryLeaveLine(req.odoo, id, leave_date_from, leave_date_to, num_leave_date_to, leave_reason_type, leave_date_type);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
@@ -188,7 +188,7 @@ export const signDocumentCtl = {
             const data = await updateTemporaryLeave(req.odoo, id, reason_leaving);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
@@ -198,7 +198,7 @@ export const signDocumentCtl = {
             const data = await updateAdvancePaymentRequest(req.odoo, id, amount, advance_payment_description, advance_payment_method, partner_id, advance_file_id);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
@@ -281,7 +281,7 @@ export const signDocumentCtl = {
         try {
             const { id } = req.params
 
-            console.log('id', id)
+            //console.log('id', id)
             const data = await getPaymentRequest(req.odoo, id)
             res.status(200).json({ data })
         } catch (error) {
@@ -315,7 +315,7 @@ export const signDocumentCtl = {
             const data = await updatePaymentRequest(req.odoo, id, advance_file_id, remaining_amount, pay_content, payment_method, expire_date, bank_ids, partner_id, payment_proposal_purpose);
             res.status(200).json({ data })
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             res.status(500).json({ msg: error.message })
         }
     },
